@@ -1,0 +1,110 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Design tokens - light mode */
+  --bg-default: #fafafa;
+  --bg-muted: #f4f6f8;
+  --surface: #ffffff;
+  --border: #e6e9ee;
+  --text-default: #0f1720;
+  --text-muted: #6b7280;
+  --accent: #0052CC;
+  --accent-2: #0065FF;
+  --success: #10b981;
+  --warning: #ff991f;
+  --danger: #de350b;
+
+  /* Dark theme tokens (will be applied when `.dark` class present on root) */
+  --dark-bg-default: #05060a;
+  --dark-bg-muted: #0b0f15;
+  --dark-surface: #0b1220;
+  --dark-border: #17202a;
+  --dark-text-default: #e6eef8;
+  --dark-text-muted: #9aa6b2;
+  --dark-accent: #4f8cff;
+  --dark-success: #12b981;
+  --dark-warning: #ffb86b;
+  --dark-danger: #ff6b6b;
+}
+
+/* Base resets & typography */
+html {
+  font-size: 14px;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--bg-default);
+  color: var(--text-default);
+  font-family: var(--font-sans);
+}
+
+/* Dark mode variables applied via .dark class on root */
+.dark body {
+  background-color: var(--dark-bg-default);
+  color: var(--dark-text-default);
+}
+
+/* Surface and borders */
+.card, .surface {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-default);
+}
+.dark .card, .dark .surface {
+  background: var(--dark-surface);
+  border: 1px solid var(--dark-border);
+  color: var(--dark-text-default);
+}
+
+/* Utility helpers for text and muted text */
+.muted { color: var(--text-muted); }
+.dark .muted { color: var(--dark-text-muted); }
+
+/* Accent helpers */
+.accent { color: var(--accent); }
+.dark .accent { color: var(--dark-accent); }
+
+/* Custom Scrollbar styled for high-end enterprise dashboards */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #eaeaea;
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #222222;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #d4d4d4;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #333333;
+}
+
+/* Global Font Scaling Configuration */
+html.text-normal {
+  font-size: 14px;
+}
+
+html.text-large {
+  font-size: 16px;
+}
+
+html.text-xlarge {
+  font-size: 18px;
+}
+
+
