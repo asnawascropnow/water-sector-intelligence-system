@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
-import { X, RefreshCw, Filter, SlidersHorizontal, User, Trello, Shield, Sliders } from "lucide-react";
-import { Location, Category, RwhStatus, WaterStressLevel, TeamMember, WorkStatus, Priority } from "../../data/mockData.types";
+import { X, RefreshCw, Filter, Trello, Shield } from "lucide-react";
+import { Location, Category, RwhStatus, WaterStressLevel, TeamMember, WorkStatus } from "../../data/mockData.types";
 
 interface FilterPanelProps {
   locations: Location[];
@@ -9,8 +9,6 @@ interface FilterPanelProps {
   setSelectedState: (state: string) => void;
   selectedDistrict: string;
   setSelectedDistrict: (district: string) => void;
-  selectedTaluk: string;
-  setSelectedTaluk: (taluk: string) => void;
   selectedCategories: Category[];
   setSelectedCategories: (categories: Category[]) => void;
   selectedRwhStatuses: RwhStatus[];
@@ -52,8 +50,6 @@ export default function FilterPanel({
   setSelectedState,
   selectedDistrict,
   setSelectedDistrict,
-  selectedTaluk,
-  setSelectedTaluk,
   selectedCategories,
   setSelectedCategories,
   selectedRwhStatuses,
@@ -89,35 +85,25 @@ export default function FilterPanel({
     return Array.from(set).sort();
   }, [locations, selectedState]);
 
-  // Extract Taluks based on selected District and State
-  const taluks = useMemo(() => {
-    let filtered = locations;
-    if (selectedState) {
-      filtered = filtered.filter((l) => l.state === selectedState);
-    }
-    if (selectedDistrict) {
-      filtered = filtered.filter((l) => l.district === selectedDistrict);
-    }
-    const set = new Set(filtered.map((l) => l.taluk));
-    return Array.from(set).sort();
-  }, [locations, selectedState, selectedDistrict]);
-
   // Static Lists
   const categoriesList: Category[] = [
     "Industry",
     "Manufacturing",
-    "University",
-    "College",
+    "Mining",
     "School",
+    "College",
+    "University",
     "Hospital",
     "Apartment/Residential",
-    "Other",
+    "Hotel",
+    "Government Building",
+    "Data Centre",
   ];
 
   const rwhStatusesList: RwhStatus[] = [
-    "Verified - Has RWH",
-    "Verified - No RWH",
-    "Unknown",
+    "verified_has_rwh",
+    "verified_no_rwh",
+    "unknown",
   ];
 
   const waterStressLevelsList: WaterStressLevel[] = [
@@ -153,24 +139,26 @@ export default function FilterPanel({
     }
   };
 
+  const getRwhStatusLabel = (status: RwhStatus) => {
+    if (status === "verified_has_rwh") return "Has RWH";
+    if (status === "verified_no_rwh") return "No RWH";
+    return "Unknown";
+  };
+
   return (
-    <div
-      id="filter-panel"
-      className="bg-white border border-[#DFE1E6] rounded-[3px] p-4 flex flex-col gap-4.5 h-full overflow-y-auto"
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-[#F4F5F7] pb-3 flex-shrink-0">
-        <div className="flex items-center gap-2 text-[#172B4D]">
-          <SlidersHorizontal size={15} className="text-[#0052CC]" />
-          <span className="font-bold text-xs uppercase tracking-wider">Refine Explorer</span>
+    <div className="w-full h-full bg-[#FAFBFC] border border-[#DFE1E6] rounded-[3px] p-4 overflow-y-auto space-y-5 font-sans text-[#172B4D]">
+      {/* SECTION: PANEL HEADER */}
+      <div className="flex items-center justify-between pb-2 border-b border-[#F4F5F7]">
+        <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-widest text-[#5E6C84]">
+          <Filter size={12} className="text-[#0052CC]" />
+          <span>Refine Directory</span>
         </div>
         <button
           onClick={onReset}
-          className="text-[11px] text-[#0052CC] hover:text-[#0065FF] hover:underline flex items-center gap-1 font-bold cursor-pointer"
-          title="Reset all filter selections"
+          className="text-[10px] text-[#0052CC] hover:text-[#0065FF] flex items-center gap-1 font-bold bg-transparent border-0 cursor-pointer transition-all"
         >
-          <RefreshCw size={11} />
-          Reset
+          <RefreshCw size={10} />
+          Reset All
         </button>
       </div>
 
@@ -251,7 +239,6 @@ export default function FilterPanel({
             onChange={(e) => {
               setSelectedState(e.target.value);
               setSelectedDistrict("");
-              setSelectedTaluk("");
             }}
             className="w-full text-xs h-[30px] px-2 bg-[#FAFBFC] border border-[#DFE1E6] hover:bg-[#EBECF0] rounded-[3px] focus:bg-white focus:border-[#0052CC] outline-none text-[#172B4D]"
           >
@@ -272,7 +259,6 @@ export default function FilterPanel({
             value={selectedDistrict}
             onChange={(e) => {
               setSelectedDistrict(e.target.value);
-              setSelectedTaluk("");
             }}
             className="w-full text-xs h-[30px] px-2 bg-[#FAFBFC] border border-[#DFE1E6] hover:bg-[#EBECF0] rounded-[3px] focus:bg-white focus:border-[#0052CC] outline-none text-[#172B4D]"
           >
@@ -280,24 +266,6 @@ export default function FilterPanel({
             {districts.map((dist) => (
               <option key={dist} value={dist}>
                 {dist}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Taluk */}
-        <div className="space-y-1">
-          <label className="text-[10px] font-bold text-[#5E6C84]">Taluk</label>
-          <select
-            id="taluk-filter-select"
-            value={selectedTaluk}
-            onChange={(e) => setSelectedTaluk(e.target.value)}
-            className="w-full text-xs h-[30px] px-2 bg-[#FAFBFC] border border-[#DFE1E6] hover:bg-[#EBECF0] rounded-[3px] focus:bg-white focus:border-[#0052CC] outline-none text-[#172B4D]"
-          >
-            <option value="">All Taluks ({taluks.length})</option>
-            {taluks.map((taluk) => (
-              <option key={taluk} value={taluk}>
-                {taluk}
               </option>
             ))}
           </select>
@@ -339,9 +307,9 @@ export default function FilterPanel({
           {rwhStatusesList.map((status) => {
             const checked = selectedRwhStatuses.includes(status);
             let colorDot = "bg-gray-400";
-            if (status === "Verified - Has RWH") colorDot = "bg-[#00875A]";
-            if (status === "Verified - No RWH") colorDot = "bg-[#DE350B]";
-            if (status === "Unknown") colorDot = "bg-[#FF991F]";
+            if (status === "verified_has_rwh") colorDot = "bg-[#00875A]";
+            if (status === "verified_no_rwh") colorDot = "bg-[#DE350B]";
+            if (status === "unknown") colorDot = "bg-[#FF991F]";
 
             return (
               <label
@@ -355,7 +323,7 @@ export default function FilterPanel({
                   className="w-3.5 h-3.5 text-[#0052CC] border-[#DFE1E6] rounded-[2px] focus:ring-[#0052CC] cursor-pointer"
                 />
                 <span className={`w-2 h-2 rounded-full ${colorDot}`} />
-                <span className="truncate">{status}</span>
+                <span className="truncate">{getRwhStatusLabel(status)}</span>
               </label>
             );
           })}

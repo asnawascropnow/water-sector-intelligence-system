@@ -88,6 +88,45 @@ export default function App() {
     );
   };
 
+  // Synchronize Google Place discovered organizations with master state
+  const handleSyncLocations = (syncedList: Location[]) => {
+    setLocations((prev) => {
+      const copy = [...prev];
+      syncedList.forEach((synced) => {
+        let index = -1;
+        if (synced.placeId) {
+          index = copy.findIndex((loc) => loc.placeId === synced.placeId);
+        }
+        
+        if (index === -1) {
+          index = copy.findIndex((loc) => loc.name.toLowerCase() === synced.name.toLowerCase());
+        }
+
+        if (index !== -1) {
+          // Exists: update
+          copy[index] = {
+            ...copy[index],
+            ...synced,
+            id: copy[index].id,
+          };
+        } else {
+          // Insert as a new organization
+          const numericIds = copy
+            .map((loc) => parseInt(loc.id.replace(/\D/g, "")))
+            .filter((num) => !isNaN(num));
+          const maxId = numericIds.length > 0 ? Math.max(...numericIds) : 100;
+          const nextId = `LOC-${maxId + 1}`;
+
+          copy.push({
+            ...synced,
+            id: nextId,
+          });
+        }
+      });
+      return copy;
+    });
+  };
+
   // Callback to update or add a work assignment, maintaining sync with lead stage
   const handleUpdateAssignment = (updatedAssign: Assignment) => {
     setAssignments((prev) => {
@@ -165,6 +204,7 @@ export default function App() {
                 selectedCategories={selectedCategories}
                 setSelectedCategories={setSelectedCategories}
                 setActiveSidebarItem={setActiveSidebarItem}
+                searchQuery={searchQuery}
               />
             }
           />
@@ -215,7 +255,16 @@ export default function App() {
           {/* Maps & Spatial Intelligence Route */}
           <Route
             path="/maps"
-            element={<Maps locations={locations} theme={theme} />}
+            element={
+              <Maps 
+                locations={locations} 
+                assignments={assignments}
+                teamMembers={teamMembers}
+                onSyncLocations={handleSyncLocations} 
+                onUpdateAssignment={handleUpdateAssignment}
+                theme={theme} 
+              />
+            }
           />
 
           {/* Analytics Route */}

@@ -31,7 +31,7 @@ export default function LeadFunnelChart({ locations }: LeadFunnelChartProps) {
 
   // Aggregate counts
   const stageCounts = locations.reduce((acc, loc) => {
-    acc[loc.leadStage] = (acc[loc.leadStage] || 0) + 1;
+    acc[loc.crm.status] = (acc[loc.crm.status] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 

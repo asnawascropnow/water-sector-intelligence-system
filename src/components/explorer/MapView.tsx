@@ -1,79 +1,60 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { APIProvider, Map as GoogleMap, AdvancedMarker, Pin, InfoWindow, useMap } from "@vis.gl/react-google-maps";
-import { Location } from "../../data/mockData.types";
-import { Info } from "lucide-react";
-
-interface MapViewProps {
-  locations: Location[];
-  selectedLocation: Location | null;
-  onLocationSelect: (location: Location) => void;
-  onOpenDrawer: () => void;
-}
+import { APIProvider, Map as GoogleMap, AdvancedMarker, Pin, InfoWindow, useMap, useMapsLibrary } from "@vis.gl/react-google-maps";
+import { Globe, BookOpen, Layers } from "lucide-react";
+import { Location, Category, RwhStatus, GooglePlaceDetails } from "../../data/mockData.types";
+import { fetchPlaceDetails } from "../../services/places/placesService";
+import { getPolygonPaths, getMultiPolygonPaths } from "../../utils/geoConversion";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string || "";
 const GOOGLE_MAPS_MAP_ID = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID as string || "";
 
-// Helper to generate a stable seed from a string
-function getSeed(str: string) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return Math.abs(hash);
-}
-
-// Generates a beautiful, stable multi-vertex closed polygon based on location acreage & coords
-export function generateLocationPolygon(loc: Location): { lat: number; lng: number }[] {
-  const centerLat = loc.lat;
-  const centerLng = loc.lng;
-  const acres = loc.landAreaAcres || 5; // default to 5 acres if missing
-  const areaSqm = acres * 4046.86;
-  const radiusMeters = Math.sqrt(areaSqm / Math.PI);
-  
-  const latOffsetFactor = radiusMeters / 111320;
-  const lngOffsetFactor = radiusMeters / (111320 * Math.cos(centerLat * Math.PI / 180));
-  
-  const seed = getSeed(loc.id + loc.name);
-  const numPoints = 6 + (seed % 3); // 6 to 8 vertexes to make it look organic
-  const points: { lat: number; lng: number }[] = [];
-  
-  for (let i = 0; i < numPoints; i++) {
-    const angle = (i * 2 * Math.PI) / numPoints;
-    // Add stable distortion per angle to resemble a realistic survey plot
-    const variationSeed = Math.sin(seed + i * 15) * 0.22 + 0.95; // stable 0.73 - 1.17 multiplier
-    const rLat = latOffsetFactor * variationSeed;
-    const rLng = lngOffsetFactor * variationSeed;
-    
-    const ptLat = centerLat + rLat * Math.cos(angle);
-    const ptLng = centerLng + rLng * Math.sin(angle);
-    points.push({ lat: ptLat, lng: ptLng });
-  }
-  
-  return points;
-}
-
-// Declarative Polygon Component for Google Maps
-function GooglePolygon({ paths, options }: { paths: { lat: number; lng: number }[]; options?: google.maps.PolygonOptions }) {
+// Declarative Polygon Component for GeoJSON rendering
+const GooglePolygon: React.FC<{ paths: { lat: number; lng: number }[]; options?: google.maps.PolygonOptions }> = ({ paths, options }) => {
   const map = useMap();
   const serializedPaths = JSON.stringify(paths);
   const serializedOptions = JSON.stringify(options);
 
   useEffect(() => {
-    if (!map || typeof google === "undefined") return;
-
+    if (!map || typeof google === "undefined" || paths.length === 0) return;
     const polygon = new google.maps.Polygon({
       paths: JSON.parse(serializedPaths),
       ...options,
     });
-
     polygon.setMap(map);
-
-    return () => {
-      polygon.setMap(null);
-    };
+    return () => { polygon.setMap(null); };
   }, [map, serializedPaths, serializedOptions]);
 
   return null;
+};
+
+// Declarative Rectangle Component for viewport bounds
+function GoogleRectangle({ bounds, options }: { bounds: google.maps.LatLngBounds; options?: google.maps.RectangleOptions }) {
+  const map = useMap();
+  const serializedBounds = JSON.stringify({
+    east: bounds.getNorthEast().lng(),
+    north: bounds.getNorthEast().lat(),
+    west: bounds.getSouthWest().lng(),
+    south: bounds.getSouthWest().lat(),
+  });
+
+  useEffect(() => {
+    if (!map || !bounds) return;
+    const rectangle = new google.maps.Rectangle({
+      bounds,
+      ...options,
+    });
+    rectangle.setMap(map);
+    return () => { rectangle.setMap(null); };
+  }, [map, serializedBounds]);
+
+  return null;
+}
+
+interface MapViewProps {
+  locations: Location[];
+  selectedLocation: Location | null;
+  onLocationSelect: (loc: Location | null) => void;
+  onOpenDrawer: () => void;
 }
 
 export default function MapView({
@@ -82,12 +63,19 @@ export default function MapView({
   onLocationSelect,
   onOpenDrawer,
 }: MapViewProps) {
-  // Default map center set to South-Central India (Karnataka/Bengaluru focus)
-  const defaultCenter = { lat: 12.9716, lng: 77.5946 };
-  const defaultZoom = 11;
+  const map = useMap();
+  const placesLib = useMapsLibrary("places");
 
-  // Track map category toggles for openly available datasets
-  const [visibleCategories, setVisibleCategories] = useState<Record<string, boolean>>({
+  // Selection states
+  const [hoveredLocation, setHoveredLocation] = useState<Location | null>(null);
+  const [activeInfoWindowId, setActiveInfoWindowId] = useState<string | null>(null);
+  
+  // Dynamic details fetched from Google Places
+  const [googlePlaceDetails, setGooglePlaceDetails] = useState<GooglePlaceDetails | null>(null);
+  const [boundaryBounds, setBoundaryBounds] = useState<google.maps.LatLngBounds | null>(null);
+
+  // Floating filter overlays state
+  const [visibleCategories, setVisibleCategories] = useState<Record<Category, boolean>>({
     School: true,
     College: true,
     University: true,
@@ -95,40 +83,80 @@ export default function MapView({
     Manufacturing: true,
     Hospital: true,
     "Apartment/Residential": true,
-    Other: true,
+    Hotel: true,
+    "Government Building": true,
+    "Data Centre": true,
+    Mining: true,
   });
 
-  const [activeInfoWindowId, setActiveInfoWindowId] = useState<string | null>(null);
+  // Default Center of India
+  const defaultCenter = { lat: 20.5937, lng: 78.9629 };
+  const defaultZoom = 5;
 
-  // Sync active info window with list selection
-  useEffect(() => {
-    if (selectedLocation) {
-      setActiveInfoWindowId(selectedLocation.id);
-    }
-  }, [selectedLocation]);
-
-  // Filter locations displayed on the map based on visible categories
+  // Filter locations by visual toggle list
   const filteredMapLocations = useMemo(() => {
-    return locations.filter((loc) => visibleCategories[loc.category] !== false);
+    return locations.filter((loc) => visibleCategories[loc.category]);
   }, [locations, visibleCategories]);
 
-  // Status badges inside map popup
-  const getRwhStatusColor = (status: string) => {
-    switch (status) {
-      case "Verified - Has RWH":
-        return "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/45 dark:text-emerald-300 dark:border-emerald-800";
-      case "Verified - No RWH":
-        return "bg-red-100 text-red-800 border-red-300 dark:bg-red-950/45 dark:text-red-300 dark:border-red-800";
-      default:
-        return "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/45 dark:text-amber-300 dark:border-amber-800";
+  // Fetch Google Place Details when marker selected
+  useEffect(() => {
+    if (!selectedLocation || !map || !placesLib) {
+      setGooglePlaceDetails(null);
+      setBoundaryBounds(null);
+      return;
     }
-  };
 
-  const toggleCategory = (cat: string) => {
+    if (selectedLocation.placeId) {
+      fetchPlaceDetails(map, selectedLocation.placeId)
+        .then((details) => {
+          setGooglePlaceDetails(details);
+        })
+        .catch(() => {
+          setGooglePlaceDetails(null);
+        });
+
+      // Viewport boundary centering
+      const service = new google.maps.places.PlacesService(map);
+      service.getDetails({
+        placeId: selectedLocation.placeId,
+        fields: ["geometry"],
+      }, (details, detailsStatus) => {
+        if (detailsStatus === google.maps.places.PlacesServiceStatus.OK && details?.geometry?.viewport) {
+          setBoundaryBounds(details.geometry.viewport);
+          map.fitBounds(details.geometry.viewport);
+        } else {
+          setBoundaryBounds(null);
+          map.panTo(selectedLocation.location);
+          map.setZoom(16);
+        }
+      });
+    } else {
+      setGooglePlaceDetails(null);
+      setBoundaryBounds(null);
+      map.panTo(selectedLocation.location);
+      map.setZoom(16);
+    }
+
+    setActiveInfoWindowId(selectedLocation.id);
+  }, [selectedLocation, map, placesLib]);
+
+  const toggleCategory = (cat: Category) => {
     setVisibleCategories((prev) => ({
       ...prev,
       [cat]: !prev[cat],
     }));
+  };
+
+  const getRwhStatusColor = (status: RwhStatus) => {
+    if (status === "verified_has_rwh") return "bg-[#E6F4EA] text-[#137333] border-[#CEEAD6]";
+    if (status === "verified_no_rwh") return "bg-[#FCE8E6] text-[#C5221F] border-[#FAD2CF]";
+    return "bg-[#FEF7E0] text-[#B06000] border-[#FEEFC3]";
+  };
+
+  const getRwhStatusLabel = (status: RwhStatus) => {
+    if (status === "verified_has_rwh") return "HAS RWH";
+    if (status === "verified_no_rwh") return "NO RWH";
+    return "UNKNOWN";
   };
 
   return (
@@ -136,139 +164,242 @@ export default function MapView({
       {GOOGLE_MAPS_API_KEY ? (
         <APIProvider apiKey={GOOGLE_MAPS_API_KEY} version="weekly">
           <GoogleMap
-          defaultCenter={defaultCenter}
-          center={selectedLocation ? { lat: selectedLocation.lat, lng: selectedLocation.lng } : undefined}
-          defaultZoom={defaultZoom}
-          zoom={selectedLocation ? 16 : undefined}
-          mapId={GOOGLE_MAPS_MAP_ID}
-          gestureHandling="greedy"
-          style={{ width: "100%", height: "100%" }}
-          zoomControl={true}
-          mapTypeControl={true}
-          fullscreenControl={true}
-          scaleControl={true}
-          streetViewControl={false}
-          internalUsageAttributionIds={['gmp_mcp_codeassist_v1_aistudio']}
-        >
-          {filteredMapLocations.map((loc) => {
-            const isSelected = selectedLocation?.id === loc.id;
+            defaultCenter={defaultCenter}
+            defaultZoom={defaultZoom}
+            mapId={GOOGLE_MAPS_MAP_ID}
+            gestureHandling="greedy"
+            style={{ width: "100%", height: "100%" }}
+            zoomControl={true}
+            mapTypeControl={true}
+            fullscreenControl={true}
+            scaleControl={true}
+            streetViewControl={false}
+            internalUsageAttributionIds={['gmp_mcp_codeassist_v1_aistudio']}
+          >
+            {filteredMapLocations.map((loc) => {
+              const isSelected = selectedLocation?.id === loc.id;
 
-            // Determine pin color based on RWH status
-            let pinColor = "#3b82f6"; // blue
-            if (loc.rwhStatus === "Verified - Has RWH") pinColor = "#10b981"; // green
-            if (loc.rwhStatus === "Verified - No RWH") pinColor = "#ef4444"; // red
-            if (loc.rwhStatus === "Unknown") pinColor = "#f59e0b"; // yellow/orange
+              // Determine pin color based on RWH status
+              let pinColor = "#3b82f6"; // blue
+              if (loc.water.rainwaterHarvesting.status === "verified_has_rwh") pinColor = "#10b981"; // green
+              if (loc.water.rainwaterHarvesting.status === "verified_no_rwh") pinColor = "#ef4444"; // red
+              if (loc.water.rainwaterHarvesting.status === "unknown") pinColor = "#f59e0b"; // yellow/orange
 
-            // Mapping category to emoji glyph
-            let emoji = "📍";
-            switch (loc.category) {
-              case "School":
-                emoji = "🏫";
-                break;
-              case "College":
-              case "University":
-                emoji = "🎓";
-                break;
-              case "Industry":
-              case "Manufacturing":
-                emoji = "🏭";
-                break;
-              case "Hospital":
-                emoji = "🏥";
-                break;
-              case "Apartment/Residential":
-                emoji = "🏢";
-                break;
-            }
+              // Mapping category to emoji glyph
+              let emoji = "📍";
+              switch (loc.category) {
+                case "School": emoji = "🏫"; break;
+                case "College":
+                case "University": emoji = "🎓"; break;
+                case "Industry":
+                case "Manufacturing": emoji = "🏭"; break;
+                case "Hospital": emoji = "🏥"; break;
+                case "Apartment/Residential": emoji = "🏢"; break;
+                case "Hotel": emoji = "🏨"; break;
+                case "Government Building": emoji = "🏛️"; break;
+                case "Data Centre": emoji = "🗄️"; break;
+                case "Mining": emoji = "⛏️"; break;
+              }
 
-            // Generate paths for property boundary
-            const polygonPaths = generateLocationPolygon(loc);
+              return (
+                <React.Fragment key={loc.id}>
+                  {/* Render GeoJSON property boundary if available */}
+                  {loc.geometry?.geojson && (
+                    <>
+                      {loc.geometry.geojson.type === "Polygon" && (
+                        <GooglePolygon
+                          paths={getPolygonPaths(loc.geometry.geojson)[0] || []}
+                          options={{
+                            strokeColor: isSelected ? "#EA580C" : pinColor,
+                            strokeOpacity: 0.8,
+                            strokeWeight: isSelected ? 3.5 : 1.5,
+                            fillColor: isSelected ? "#EA580C" : pinColor,
+                            fillOpacity: isSelected ? 0.38 : 0.12,
+                          }}
+                        />
+                      )}
+                      {loc.geometry.geojson.type === "MultiPolygon" && 
+                        getMultiPolygonPaths(loc.geometry.geojson).map((polyPaths, pIdx) => (
+                          <GooglePolygon
+                            key={`${loc.id}-poly-${pIdx}`}
+                            paths={polyPaths[0] || []}
+                            options={{
+                              strokeColor: isSelected ? "#EA580C" : pinColor,
+                              strokeOpacity: 0.8,
+                              strokeWeight: isSelected ? 3.5 : 1.5,
+                              fillColor: isSelected ? "#EA580C" : pinColor,
+                              fillOpacity: isSelected ? 0.38 : 0.12,
+                            }}
+                          />
+                        ))
+                      }
+                    </>
+                  )}
 
-            return (
-              <React.Fragment key={loc.id}>
-                {/* Boundary Polygon */}
-                <GooglePolygon
-                  paths={polygonPaths}
-                  options={{
-                    strokeColor: isSelected ? "#EA580C" : pinColor,
-                    strokeOpacity: 0.8,
-                    strokeWeight: isSelected ? 3.5 : 1.5,
-                    fillColor: isSelected ? "#EA580C" : pinColor,
-                    fillOpacity: isSelected ? 0.38 : 0.12,
-                  }}
-                />
+                  {/* Draw Google Places bounds Rectangle when selected */}
+                  {isSelected && boundaryBounds && (
+                    <GoogleRectangle
+                      bounds={boundaryBounds}
+                      options={{
+                        strokeColor: "#1A73E8",
+                        strokeOpacity: 0.85,
+                        strokeWeight: 3,
+                        fillColor: "#1A73E8",
+                        fillOpacity: 0.12,
+                        clickable: false,
+                      }}
+                    />
+                  )}
 
-                {/* Advanced Marker */}
-                <AdvancedMarker
-                  position={{ lat: loc.lat, lng: loc.lng }}
-                  onClick={() => {
-                    onLocationSelect(loc);
-                    setActiveInfoWindowId(loc.id);
-                  }}
-                >
-                  <Pin
-                    background={pinColor}
-                    borderColor={isSelected ? "#ea580c" : "#ffffff"}
-                    glyph={emoji}
-                  />
-                </AdvancedMarker>
-              </React.Fragment>
-            );
-          })}
-
-          {selectedLocation && activeInfoWindowId === selectedLocation.id && (
-            <InfoWindow
-              position={{ lat: selectedLocation.lat, lng: selectedLocation.lng }}
-              onCloseClick={() => setActiveInfoWindowId(null)}
-            >
-              <div className="p-1 min-w-[210px] text-slate-800 font-sans">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <span className="text-xs" title={selectedLocation.category}>
-                    {selectedLocation.category === "School" && "🏫"}
-                    {(selectedLocation.category === "College" || selectedLocation.category === "University") && "🎓"}
-                    {(selectedLocation.category === "Industry" || selectedLocation.category === "Manufacturing") && "🏭"}
-                    {selectedLocation.category === "Hospital" && "🏥"}
-                    {selectedLocation.category === "Apartment/Residential" && "🏢"}
-                    {selectedLocation.category === "Other" && "📍"}
-                  </span>
-                  <h6 className="font-bold text-[13px] leading-tight m-0 truncate flex-1 text-slate-900">
-                    {selectedLocation.name}
-                  </h6>
-                </div>
-                <p className="text-[11px] text-slate-500 m-0 mb-2 truncate">
-                  {selectedLocation.district}, {selectedLocation.state} (Pincode: {selectedLocation.pincode})
-                </p>
-
-                <div className="text-[10px] space-y-0.5 mb-2.5 bg-slate-50 p-1.5 rounded border border-slate-100 font-mono">
-                  <div><span className="text-slate-400">Dataset:</span> {selectedLocation.dataSource || "Open Data"}</div>
-                  <div><span className="text-slate-400">Source:</span> {selectedLocation.waterSource}</div>
-                </div>
-                <div className="flex items-center justify-between gap-2 mt-1">
-                  <span
-                    className={`text-[9px] font-extrabold px-1.5 py-0.5 border rounded-sm tracking-wide ${getRwhStatusColor(
-                      selectedLocation.rwhStatus
-                    )}`}
-                  >
-                    {selectedLocation.rwhStatus === "Verified - Has RWH"
-                      ? "HAS RWH"
-                      : selectedLocation.rwhStatus === "Verified - No RWH"
-                      ? "NO RWH"
-                      : "UNKNOWN"}
-                  </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onOpenDrawer();
+                  {/* Advanced Marker */}
+                  <AdvancedMarker
+                    position={loc.location}
+                    onClick={() => {
+                      onLocationSelect(loc);
+                      setActiveInfoWindowId(loc.id);
                     }}
-                    className="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold px-2 py-1 rounded transition-all cursor-pointer shadow-sm border-0"
+                    onMouseEnter={() => setHoveredLocation(loc)}
+                    onMouseLeave={() => setHoveredLocation(null)}
                   >
-                    View Details
-                  </button>
+                    <Pin
+                      background={pinColor}
+                      borderColor={isSelected ? "#ea580c" : "#ffffff"}
+                      glyph={emoji}
+                    />
+                  </AdvancedMarker>
+                </React.Fragment>
+              );
+            })}
+
+            {/* Hover Tooltip InfoWindow */}
+            {hoveredLocation && (!selectedLocation || selectedLocation.id !== hoveredLocation.id) && (
+              <InfoWindow
+                position={hoveredLocation.location}
+                options={{ disableAutoPan: true, headerDisabled: true }}
+              >
+                <div className="p-1.5 text-xs font-sans text-slate-800 pointer-events-none min-w-[150px]">
+                  <p className="font-extrabold m-0 text-slate-900 leading-tight">{hoveredLocation.name}</p>
+                  <p className="text-[10px] text-slate-500 m-0 mt-0.5">
+                    {hoveredLocation.category} • {hoveredLocation.water.estimatedRoofArea ? Math.round(hoveredLocation.water.estimatedRoofArea * 4 / 4046.86) : 0} ac
+                  </p>
+                  <div className="text-[9px] font-extrabold text-indigo-600 mt-1 uppercase tracking-wide">
+                    Stress: {hoveredLocation.water.waterStressLevel}
+                  </div>
                 </div>
-              </div>
-            </InfoWindow>
-          )}
+              </InfoWindow>
+            )}
+
+            {/* Click Details InfoWindow */}
+            {selectedLocation && activeInfoWindowId === selectedLocation.id && (
+              <InfoWindow
+                position={selectedLocation.location}
+                onCloseClick={() => {
+                  setActiveInfoWindowId(null);
+                  onLocationSelect(null);
+                }}
+              >
+                <div className="p-2 min-w-[240px] max-w-[280px] text-slate-800 font-sans">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <span className="text-sm" title={selectedLocation.category}>
+                      {selectedLocation.category === "School" && "🏫"}
+                      {(selectedLocation.category === "College" || selectedLocation.category === "University") && "🎓"}
+                      {(selectedLocation.category === "Industry" || selectedLocation.category === "Manufacturing") && "🏭"}
+                      {selectedLocation.category === "Hospital" && "🏥"}
+                      {selectedLocation.category === "Apartment/Residential" && "🏢"}
+                      {selectedLocation.category === "Hotel" && "🏨"}
+                      {selectedLocation.category === "Government Building" && "🏛️"}
+                      {selectedLocation.category === "Data Centre" && "🗄️"}
+                      {selectedLocation.category === "Mining" && "⛏️"}
+                    </span>
+                    <h6 className="font-bold text-[13px] leading-tight m-0 truncate flex-1 text-slate-900">
+                      {selectedLocation.name}
+                    </h6>
+                  </div>
+                  <p className="text-[11px] text-slate-500 m-0 mb-2 truncate">
+                    {selectedLocation.district}, {selectedLocation.state}
+                  </p>
+
+                  <div className="text-[10px] space-y-1 mb-2.5 bg-slate-50 p-2 rounded border border-slate-100">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">📐 Roof Area:</span> 
+                      <span className="font-medium">
+                        {selectedLocation.water.estimatedRoofArea ? `${selectedLocation.water.estimatedRoofArea.toLocaleString()} m²` : "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">💧 Source:</span> 
+                      <span className="font-medium">{selectedLocation.water.waterSource}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">🌊 Stress:</span> 
+                      <span className="font-medium text-red-650 dark:text-red-400">{selectedLocation.water.waterStressLevel}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">🌧️ Verified:</span> 
+                      <span className="font-medium">{selectedLocation.water.rainwaterHarvesting.verified ? "Yes" : "No"}</span>
+                    </div>
+                    
+                    {googlePlaceDetails && (
+                      <div className="pt-1.5 mt-1.5 border-t border-slate-200/60 space-y-1 text-[9.5px]">
+                        {googlePlaceDetails.formattedAddress && (
+                          <div className="text-slate-600 leading-normal">
+                            <span className="font-semibold text-slate-700">📍 Address:</span> {googlePlaceDetails.formattedAddress}
+                          </div>
+                        )}
+                        {googlePlaceDetails.website && (
+                          <div>
+                            <span className="font-semibold text-slate-700">🌐 Website:</span>{" "}
+                            <a href={googlePlaceDetails.website} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline break-all">
+                              {googlePlaceDetails.website.replace(/^https?:\/\/(www\.)?/, "")}
+                            </a>
+                          </div>
+                        )}
+                        {googlePlaceDetails.formattedPhoneNumber && (
+                          <div><span className="font-semibold text-slate-700">☎️ Phone:</span> {googlePlaceDetails.formattedPhoneNumber}</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center justify-between gap-2 mt-1.5">
+                    <span
+                      className={`text-[9px] font-extrabold px-1.5 py-0.5 border rounded-sm tracking-wide ${getRwhStatusColor(
+                        selectedLocation.water.rainwaterHarvesting.status
+                      )}`}
+                    >
+                      {getRwhStatusLabel(selectedLocation.water.rainwaterHarvesting.status)}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenDrawer();
+                      }}
+                      className="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold px-2.5 py-1 rounded transition-all cursor-pointer shadow-sm border-0"
+                    >
+                      View Details
+                    </button>
+                  </div>
+                </div>
+              </InfoWindow>
+            )}
           </GoogleMap>
+          
+          {/* Floating Map Reset Controls Panel */}
+          <div className="absolute bottom-5 right-5 z-[500] flex flex-col gap-2">
+            <button
+              onClick={() => {
+                onLocationSelect(null);
+                setActiveInfoWindowId(null);
+                setBoundaryBounds(null);
+                setGooglePlaceDetails(null);
+              }}
+              className="bg-white/95 dark:bg-[#09090b]/95 text-slate-800 dark:text-zinc-200 hover:bg-slate-50 dark:hover:bg-zinc-900 px-3.5 py-2.5 rounded border border-slate-200 dark:border-zinc-800 shadow-md flex items-center gap-2 text-xs font-semibold cursor-pointer transition-all hover:scale-[1.02] shadow-indigo-100/40 dark:shadow-none"
+              title="Reset Map to India National View"
+            >
+              <Globe size={13} className="text-indigo-600 dark:text-indigo-400" />
+              <span>Reset Map View</span>
+            </button>
+          </div>
         </APIProvider>
       ) : (
         <div className="w-full h-full flex items-center justify-center text-sm text-slate-500 bg-white">
@@ -310,7 +441,7 @@ export default function MapView({
         <p className="text-[10px] text-slate-400 dark:text-zinc-500 leading-normal my-1.5">
           Select and filter open public agency records mapped across the region:
         </p>
-        <div className="space-y-1.5 mt-2">
+        <div className="space-y-1.5 mt-2 max-h-[180px] overflow-y-auto pr-1">
           <label className="flex items-center gap-2 cursor-pointer py-0.5 hover:bg-slate-50 dark:hover:bg-zinc-900 rounded px-1 transition-colors">
             <input
               type="checkbox"
@@ -326,38 +457,48 @@ export default function MapView({
           <label className="flex items-center gap-2 cursor-pointer py-0.5 hover:bg-slate-50 dark:hover:bg-zinc-900 rounded px-1 transition-colors">
             <input
               type="checkbox"
-              checked={!!(visibleCategories.College && visibleCategories.University)}
-              onChange={() => {
-                const currentVal = !visibleCategories.College;
-                setVisibleCategories((prev) => ({
-                  ...prev,
-                  College: currentVal,
-                  University: currentVal,
-                }));
-              }}
+              checked={!!visibleCategories.College}
+              onChange={() => toggleCategory("College")}
               className="accent-indigo-600 rounded text-indigo-600"
             />
             <span className="text-[11px] flex items-center gap-1.5 flex-1 text-slate-700 dark:text-zinc-200">
-              <span>🎓</span> Higher Education <span className="text-[9.5px] text-slate-400 dark:text-zinc-500 font-mono ml-auto">AISHE</span>
+              <span>🎓</span> Colleges <span className="text-[9.5px] text-slate-400 dark:text-zinc-500 font-mono ml-auto">AISHE</span>
             </span>
           </label>
 
           <label className="flex items-center gap-2 cursor-pointer py-0.5 hover:bg-slate-50 dark:hover:bg-zinc-900 rounded px-1 transition-colors">
             <input
               type="checkbox"
-              checked={!!(visibleCategories.Industry && visibleCategories.Manufacturing)}
-              onChange={() => {
-                const currentVal = !visibleCategories.Industry;
-                setVisibleCategories((prev) => ({
-                  ...prev,
-                  Industry: currentVal,
-                  Manufacturing: currentVal,
-                }));
-              }}
+              checked={!!visibleCategories.University}
+              onChange={() => toggleCategory("University")}
               className="accent-indigo-600 rounded text-indigo-600"
             />
             <span className="text-[11px] flex items-center gap-1.5 flex-1 text-slate-700 dark:text-zinc-200">
-              <span>🏭</span> Industrial & Mfg <span className="text-[9.5px] text-slate-400 dark:text-zinc-500 font-mono ml-auto">KSPCB</span>
+              <span>🎓</span> Universities <span className="text-[9.5px] text-slate-400 dark:text-zinc-500 font-mono ml-auto">AISHE</span>
+            </span>
+          </label>
+
+          <label className="flex items-center gap-2 cursor-pointer py-0.5 hover:bg-slate-50 dark:hover:bg-zinc-900 rounded px-1 transition-colors">
+            <input
+              type="checkbox"
+              checked={!!visibleCategories.Industry}
+              onChange={() => toggleCategory("Industry")}
+              className="accent-indigo-600 rounded text-indigo-600"
+            />
+            <span className="text-[11px] flex items-center gap-1.5 flex-1 text-slate-700 dark:text-zinc-200">
+              <span>🏭</span> Industries <span className="text-[9.5px] text-slate-400 dark:text-zinc-500 font-mono ml-auto">KSPCB</span>
+            </span>
+          </label>
+
+          <label className="flex items-center gap-2 cursor-pointer py-0.5 hover:bg-slate-50 dark:hover:bg-zinc-900 rounded px-1 transition-colors">
+            <input
+              type="checkbox"
+              checked={!!visibleCategories.Manufacturing}
+              onChange={() => toggleCategory("Manufacturing")}
+              className="accent-indigo-600 rounded text-indigo-600"
+            />
+            <span className="text-[11px] flex items-center gap-1.5 flex-1 text-slate-700 dark:text-zinc-200">
+              <span>🏭</span> Manufacturing <span className="text-[9.5px] text-slate-400 dark:text-zinc-500 font-mono ml-auto">KSPCB</span>
             </span>
           </label>
 
@@ -369,7 +510,7 @@ export default function MapView({
               className="accent-indigo-600 rounded text-indigo-600"
             />
             <span className="text-[11px] flex items-center gap-1.5 flex-1 text-slate-700 dark:text-zinc-200">
-              <span>🏥</span> Hospitals & Medical <span className="text-[9.5px] text-slate-400 dark:text-zinc-500 font-mono ml-auto">NHA</span>
+              <span>🏥</span> Hospitals <span className="text-[9.5px] text-slate-400 dark:text-zinc-500 font-mono ml-auto">NIDM</span>
             </span>
           </label>
 
@@ -381,13 +522,9 @@ export default function MapView({
               className="accent-indigo-600 rounded text-indigo-600"
             />
             <span className="text-[11px] flex items-center gap-1.5 flex-1 text-slate-700 dark:text-zinc-200">
-              <span>🏢</span> Residential Complexes <span className="text-[9.5px] text-slate-400 dark:text-zinc-500 font-mono ml-auto">RWA</span>
+              <span>🏢</span> Apartments <span className="text-[9.5px] text-slate-400 dark:text-zinc-500 font-mono ml-auto">RERA</span>
             </span>
           </label>
-        </div>
-        <div className="mt-3 pt-2 border-t border-slate-100 dark:border-zinc-850 flex items-center gap-1.5 text-[9px] text-slate-400 dark:text-zinc-500 font-mono">
-          <Info size={11} className="text-indigo-500 flex-shrink-0" />
-          <span>Showing {filteredMapLocations.length} active nodes</span>
         </div>
       </div>
     </div>

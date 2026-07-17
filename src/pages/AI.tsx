@@ -37,11 +37,11 @@ export default function AI({ locations, theme }: AIProps) {
 
   // High opportunity recommendations from mock data
   const highYieldOpportunities = locations
-    .filter(loc => loc.rwhStatus === "Verified - No RWH" && (loc.waterStressLevel === "Semi-Critical" || loc.waterStressLevel === "Over-Exploited"))
+    .filter(loc => loc.water.rainwaterHarvesting.status === "verified_no_rwh" && (loc.water.waterStressLevel === "Semi-Critical" || loc.water.waterStressLevel === "Over-Exploited"))
     .slice(0, 3)
     .map(loc => {
       // rough potential calculation
-      const area = loc.landAreaAcres || 3.5;
+      const area = loc.water.estimatedRoofArea ? (loc.water.estimatedRoofArea * 4 / 4046.86) : 3.5;
       const potentialLiters = (area * 4046.86 * 0.8 * 850).toFixed(0); // Area (m2) * runoff coeff * rainfall (mm)
       return {
         ...loc,
@@ -70,7 +70,7 @@ export default function AI({ locations, theme }: AIProps) {
       const lowerQuery = inputText.toLowerCase();
 
       if (lowerQuery.includes("karnataka") || lowerQuery.includes("bangalore") || lowerQuery.includes("bengaluru")) {
-        const noRwhCount = locations.filter(loc => loc.state === "Karnataka" && loc.rwhStatus === "Verified - No RWH").length;
+        const noRwhCount = locations.filter(loc => loc.state === "Karnataka" && loc.water.rainwaterHarvesting.status === "verified_no_rwh").length;
         botResponse = `Karnataka currently has ${noRwhCount} verified facilities without active rainwater harvesting (No RWH). The high-yield hotspots include Reva University and Baldwin High School campuses which have substantial catchment roof areas.`;
       } else if (lowerQuery.includes("gujarat") || lowerQuery.includes("ahmedabad")) {
         botResponse = `Gujarat has 22 mapped complexes. 14 are categorized as 'Over-exploited' due to intense salinity in deep aquifers. Setting up on-site sedimentation filters and rooftop redirectors would save roughly 4.2 million liters annually across Peenya textile zones.`;
@@ -264,8 +264,13 @@ export default function AI({ locations, theme }: AIProps) {
                     </div>
                     <p className="text-[10px] text-slate-450 leading-none">{opp.district}, {opp.state}</p>
                     <div className="flex items-center justify-between text-[9px] pt-1 border-t border-slate-100/60 dark:border-zinc-850/30">
-                      <span className="text-slate-400">Stress class: <strong className="text-red-650 dark:text-red-400">{opp.waterStressLevel}</strong></span>
-                      <span className="text-slate-400">Rooftop Area: <strong className="text-indigo-650 dark:text-indigo-400">{opp.landAreaAcres || 3.5} ac</strong></span>
+                      <span className="text-slate-400">Stress class: <strong className="text-red-650 dark:text-red-400">{opp.water.waterStressLevel}</strong></span>
+                      {(() => {
+                        const oppAcres = opp.water.estimatedRoofArea ? (opp.water.estimatedRoofArea * 4 / 4046.86) : 3.5;
+                        return (
+                          <span className="text-slate-400">Rooftop Area: <strong className="text-indigo-650 dark:text-indigo-400">{oppAcres.toFixed(1)} ac</strong></span>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>

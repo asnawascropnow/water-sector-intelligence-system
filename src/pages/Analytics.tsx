@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { 
   BarChart, 
   Bar, 
@@ -10,42 +10,38 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell,
-  LineChart,
-  Line
+  Cell
 } from "recharts";
 import { 
-  TrendingUp, 
-  BarChart3, 
-  PieChart as PieIcon, 
-  ArrowUpRight, 
-  Activity, 
   CheckCircle2, 
-  Sparkles,
-  Award,
+  Activity, 
+  Sparkles, 
+  Award, 
+  BarChart3, 
+  PieChart as PieIcon,
   BookOpen
 } from "lucide-react";
-import { Location } from "../data/mockData.types";
+import { Location, RwhStatus } from "../data/mockData.types";
 
 interface AnalyticsProps {
   locations: Location[];
   theme?: "light" | "dark";
 }
 
-export default function Analytics({ locations, theme }: AnalyticsProps) {
-  const [selectedState, setSelectedState] = useState("All States");
+export default function Analytics({ locations }: AnalyticsProps) {
+  const [selectedState, setSelectedState] = useState("All");
 
-  // Filter locations geographically
-  const filtered = selectedState === "All States" 
+  // Filter locations by state if selected
+  const filtered = selectedState === "All" 
     ? locations 
     : locations.filter(loc => loc.state === selectedState);
 
   // Group locations by category
-  const categories = ["School", "College", "University", "Industry", "Manufacturing", "Hospital", "Apartment/Residential", "Other"];
+  const categories = ["School", "College", "University", "Industry", "Manufacturing", "Hospital", "Apartment/Residential", "Hotel", "Government Building", "Data Centre", "Mining"];
   const categoryData = categories.map(cat => {
     const subset = filtered.filter(loc => loc.category === cat);
-    const hasRwh = subset.filter(loc => loc.rwhStatus === "Verified - Has RWH").length;
-    const noRwh = subset.filter(loc => loc.rwhStatus === "Verified - No RWH").length;
+    const hasRwh = subset.filter(loc => loc.water.rainwaterHarvesting.status === "verified_has_rwh").length;
+    const noRwh = subset.filter(loc => loc.water.rainwaterHarvesting.status === "verified_no_rwh").length;
     return {
       name: cat,
       "Has RWH": hasRwh,
@@ -55,12 +51,12 @@ export default function Analytics({ locations, theme }: AnalyticsProps) {
   }).filter(item => item.Total > 0);
 
   // Group locations by RWH status
-  const rwhStatuses = ["Verified - Has RWH", "Verified - No RWH", "Unknown"];
+  const rwhStatuses: RwhStatus[] = ["verified_has_rwh", "verified_no_rwh", "unknown"];
   const colors = ["#10B981", "#EF4444", "#F59E0B"];
   const rwhData = rwhStatuses.map((status, idx) => {
-    const count = filtered.filter(loc => loc.rwhStatus === status).length;
+    const count = filtered.filter(loc => loc.water.rainwaterHarvesting.status === status).length;
     return {
-      name: status.replace("Verified - ", ""),
+      name: status === "verified_has_rwh" ? "Has RWH" : status === "verified_no_rwh" ? "No RWH" : "Unknown",
       value: count,
       color: colors[idx]
     };
@@ -70,9 +66,12 @@ export default function Analytics({ locations, theme }: AnalyticsProps) {
   const statesList = ["Karnataka", "Gujarat", "Tamil Nadu", "Maharashtra"];
   const stateBreakdown = statesList.map(st => {
     const subset = locations.filter(loc => loc.state === st);
-    const hasRwh = subset.filter(loc => loc.rwhStatus === "Verified - Has RWH").length;
+    const hasRwh = subset.filter(loc => loc.water.rainwaterHarvesting.status === "verified_has_rwh").length;
     const rate = subset.length > 0 ? (hasRwh / subset.length) * 100 : 0;
-    const totalAcres = subset.reduce((acc, curr) => acc + (curr.landAreaAcres || 0), 0);
+    const totalAcres = subset.reduce((acc, curr) => {
+      const acres = curr.water.estimatedRoofArea ? (curr.water.estimatedRoofArea * 4 / 4046.86) : 0;
+      return acc + acres;
+    }, 0);
     return {
       state: st,
       total: subset.length,
@@ -83,30 +82,24 @@ export default function Analytics({ locations, theme }: AnalyticsProps) {
   });
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto text-slate-900 dark:text-zinc-50" id="analytics-page-container">
-      {/* Top Header Card */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-[#09090b] border border-slate-200 dark:border-zinc-850 p-4 rounded-md shadow-sm">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <div className="bg-indigo-50 dark:bg-indigo-950/40 p-1.5 rounded text-indigo-700 dark:text-indigo-400">
-              <TrendingUp size={18} />
-            </div>
-            <h2 className="text-lg font-extrabold tracking-wider uppercase">Analytics & Benchmarking</h2>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-zinc-400">
-            Statistical distribution, sector benchmarks, and water stress impact mapping.
-          </p>
+    <div className="p-6 space-y-6 max-w-7xl mx-auto font-sans text-slate-800 dark:text-zinc-200" id="analytics-screen-container">
+      
+      {/* Sub-header Controls */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-[#09090b] border border-slate-200 dark:border-zinc-850 p-4 rounded-md shadow-sm">
+        <div>
+          <h3 className="text-base font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">Geospatial Analytics & Compliance Charts</h3>
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">Cross-referencing aquifer risk zones with real facility RWH adoption metrics.</p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-semibold text-slate-500">Benchmark scope:</span>
-          <select 
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-slate-500 dark:text-zinc-400">Territory Filter:</span>
+          <select
             value={selectedState}
             onChange={(e) => setSelectedState(e.target.value)}
-            className="text-xs bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded px-2.5 py-1.5 font-medium cursor-pointer"
+            className="text-xs font-semibold bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded px-2.5 py-1.5 outline-none cursor-pointer"
           >
-            <option value="All States">All States ({locations.length})</option>
-            <option value="Karnataka">Karnataka (35)</option>
+            <option value="All">All Regions ({locations.length})</option>
+            <option value="Karnataka">Karnataka (211)</option>
             <option value="Gujarat">Gujarat (22)</option>
             <option value="Tamil Nadu">Tamil Nadu (12)</option>
             <option value="Maharashtra">Maharashtra (11)</option>
@@ -123,7 +116,7 @@ export default function Analytics({ locations, theme }: AnalyticsProps) {
           <div>
             <p className="text-[10px] font-bold text-slate-500 dark:text-zinc-455 uppercase tracking-wider">Overall Adoption</p>
             <p className="text-lg font-extrabold text-slate-900 dark:text-zinc-50 mt-0.5">
-              {((filtered.filter(loc => loc.rwhStatus === "Verified - Has RWH").length / (filtered.length || 1)) * 100).toFixed(1)}%
+              {((filtered.filter(loc => loc.water.rainwaterHarvesting.status === "verified_has_rwh").length / (filtered.length || 1)) * 100).toFixed(1)}%
             </p>
             <p className="text-[9px] text-emerald-600 font-semibold mt-1">Verified RWH coverage</p>
           </div>
@@ -136,7 +129,7 @@ export default function Analytics({ locations, theme }: AnalyticsProps) {
           <div>
             <p className="text-[10px] font-bold text-slate-500 dark:text-zinc-455 uppercase tracking-wider">Active Survey Count</p>
             <p className="text-lg font-extrabold text-slate-900 dark:text-zinc-50 mt-0.5">{filtered.length} Facilities</p>
-            <p className="text-[9px] text-slate-500 dark:text-zinc-400 mt-1">Physical locations audited</p>
+            <p className="text-[9px] text-slate-550 dark:text-zinc-450 mt-1">Physical locations audited</p>
           </div>
         </div>
 
@@ -147,7 +140,7 @@ export default function Analytics({ locations, theme }: AnalyticsProps) {
           <div>
             <p className="text-[10px] font-bold text-slate-500 dark:text-zinc-455 uppercase tracking-wider">Opportunity Index</p>
             <p className="text-lg font-extrabold text-slate-900 dark:text-zinc-50 mt-0.5">
-              {filtered.filter(loc => loc.rwhStatus === "Verified - No RWH").length} Nodes
+              {filtered.filter(loc => loc.water.rainwaterHarvesting.status === "verified_no_rwh").length} Nodes
             </p>
             <p className="text-[9px] text-purple-600 font-semibold mt-1">Potential target campaigns</p>
           </div>
@@ -170,7 +163,7 @@ export default function Analytics({ locations, theme }: AnalyticsProps) {
         
         {/* Sector distribution comparison */}
         <div className="bg-white dark:bg-[#09090b] border border-slate-200 dark:border-zinc-850 rounded-md shadow-sm p-5 lg:col-span-8 flex flex-col justify-between">
-          <div className="pb-3 border-b border-slate-100 dark:border-zinc-850/80 flex items-center justify-between">
+          <div className="pb-3 border-b border-slate-100 dark:border-zinc-850/85 flex items-center justify-between">
             <h4 className="text-sm font-extrabold text-slate-900 dark:text-zinc-50 uppercase tracking-wider flex items-center gap-2">
               <BarChart3 size={15} className="text-indigo-600 dark:text-indigo-400" />
               Harvesting Implementation by Industry Sector
@@ -195,7 +188,7 @@ export default function Analytics({ locations, theme }: AnalyticsProps) {
 
         {/* Status Breakdown Circle */}
         <div className="bg-white dark:bg-[#09090b] border border-slate-200 dark:border-zinc-850 rounded-md shadow-sm p-5 lg:col-span-4 flex flex-col justify-between">
-          <div className="pb-3 border-b border-slate-100 dark:border-zinc-850/80 flex items-center justify-between">
+          <div className="pb-3 border-b border-slate-100 dark:border-zinc-850/85 flex items-center justify-between">
             <h4 className="text-sm font-extrabold text-slate-900 dark:text-zinc-50 uppercase tracking-wider flex items-center gap-2">
               <PieIcon size={15} className="text-indigo-600 dark:text-indigo-400" />
               RWH Status Share
@@ -224,16 +217,16 @@ export default function Analytics({ locations, theme }: AnalyticsProps) {
             </ResponsiveContainer>
             <div className="absolute text-center">
               <span className="block text-xl font-extrabold text-slate-900 dark:text-white">{filtered.length}</span>
-              <span className="text-[9px] uppercase text-slate-500 font-bold tracking-wider">Total Audits</span>
+              <span className="text-[9px] uppercase text-slate-550 dark:text-zinc-450 font-bold tracking-wider">Total Audits</span>
             </div>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 font-sans">
             {rwhData.map((item, idx) => (
               <div key={item.name} className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }}></span>
-                  <span className="text-slate-600 dark:text-zinc-400">{item.name}</span>
+                  <span className="text-slate-650 dark:text-zinc-450">{item.name}</span>
                 </div>
                 <span className="font-bold text-slate-900 dark:text-white">
                   {item.value} ({((item.value / filtered.length) * 100).toFixed(0)}%)
@@ -248,7 +241,7 @@ export default function Analytics({ locations, theme }: AnalyticsProps) {
       <div className="bg-white dark:bg-[#09090b] border border-slate-200 dark:border-zinc-850 rounded-md shadow-sm p-5 space-y-4">
         <div className="pb-3 border-b border-slate-100 dark:border-zinc-850/80 flex items-center justify-between">
           <h4 className="text-sm font-extrabold text-slate-900 dark:text-zinc-50 uppercase tracking-wider flex items-center gap-2">
-            <BookOpen size={16} className="text-indigo-600" />
+            <BookOpen size={16} className="text-indigo-650 dark:text-indigo-400" />
             Regional Water Harvesting Scorecards
           </h4>
           <span className="text-xs font-mono text-slate-500">Live Census Comparisons</span>
@@ -266,12 +259,12 @@ export default function Analytics({ locations, theme }: AnalyticsProps) {
                 <th className="p-3">Territory Risk Level</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-zinc-850/80 text-slate-700 dark:text-zinc-300">
+            <tbody className="divide-y divide-slate-100 dark:divide-zinc-850/80 text-slate-750 dark:text-zinc-350">
               {stateBreakdown.map((row) => (
                 <tr key={row.state} className="hover:bg-slate-50/50 dark:hover:bg-zinc-900/40">
                   <td className="p-3 font-bold text-slate-900 dark:text-zinc-100">{row.state} Region</td>
-                  <td className="p-3 text-slate-500 dark:text-zinc-400 font-bold">{row.total} complexes</td>
-                  <td className="p-3 text-slate-850 dark:text-zinc-200 font-semibold">{row.hasRwh} audited</td>
+                  <td className="p-3 text-slate-550 dark:text-zinc-450 font-bold">{row.total} complexes</td>
+                  <td className="p-3 text-slate-800 dark:text-zinc-200 font-semibold">{row.hasRwh} audited</td>
                   <td className="p-3 font-mono text-indigo-650 dark:text-indigo-400 font-bold">{row.acres} Acres</td>
                   <td className="p-3">
                     <div className="flex items-center gap-2">

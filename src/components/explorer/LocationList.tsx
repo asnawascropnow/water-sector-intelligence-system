@@ -26,9 +26,11 @@ export default function LocationList({
       if (sortBy === "name") {
         return a.name.localeCompare(b.name);
       } else if (sortBy === "landArea") {
-        return b.landAreaAcres - a.landAreaAcres; // descending
+        const aAcres = a.water.estimatedRoofArea ? (a.water.estimatedRoofArea * 4 / 4046.86) : 0;
+        const bAcres = b.water.estimatedRoofArea ? (b.water.estimatedRoofArea * 4 / 4046.86) : 0;
+        return bAcres - aAcres; // descending
       } else if (sortBy === "verifiedDate") {
-        return b.lastVerifiedDate.localeCompare(a.lastVerifiedDate); // descending
+        return b.geometry.lastUpdated.localeCompare(a.geometry.lastUpdated); // descending
       }
       return 0;
     });

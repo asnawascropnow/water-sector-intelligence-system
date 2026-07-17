@@ -1,24 +1,26 @@
 import React from "react";
-import { 
-  Building2, 
-  School as SchoolIcon, 
-  Hospital as HospitalIcon, 
-  Home, 
-  MapPin, 
-  Compass, 
-  Scale, 
-  Briefcase 
+import {
+  MapPin,
+  Building2,
+  Home,
+  Bed,
+  Landmark,
+  Cpu,
+  Hammer,
+  Compass,
+  School as SchoolIcon,
+  Hospital as HospitalIcon,
 } from "lucide-react";
-import { Location } from "../../data/mockData.types";
+import { Location, Category, RwhStatus, WaterStressLevel } from "../../data/mockData.types";
 
 interface LocationRowProps {
-  key?: string;
+  key?: React.Key | string;
   location: Location;
   isSelected: boolean;
   onClick: () => void;
 }
 
-export default function LocationRow({ location, isSelected, onClick }: LocationRowProps) {
+const LocationRow: React.FC<LocationRowProps> = ({ location, isSelected, onClick }) => {
   // Select category icon
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -34,24 +36,38 @@ export default function LocationRow({ location, isSelected, onClick }: LocationR
       case "Industry":
       case "Manufacturing":
         return <Building2 size={14} className="text-[#FF7A00]" />;
+      case "Hotel":
+        return <Bed size={14} className="text-[#00B8D9]" />;
+      case "Government Building":
+        return <Landmark size={14} className="text-[#4C5B76]" />;
+      case "Data Centre":
+        return <Cpu size={14} className="text-[#36B37E]" />;
+      case "Mining":
+        return <Hammer size={14} className="text-[#FFAB00]" />;
       default:
         return <Compass size={14} className="text-[#42526E]" />;
     }
   };
 
   // Status badge styles
-  const getRwhStatusStyles = (status: string) => {
+  const getRwhStatusStyles = (status: RwhStatus) => {
     switch (status) {
-      case "Verified - Has RWH":
+      case "verified_has_rwh":
         return "bg-[#E3FCEF] text-[#006644] border-[#ABF5D1]";
-      case "Verified - No RWH":
+      case "verified_no_rwh":
         return "bg-[#FFEBE6] text-[#BF2600] border-[#FFBDAD]";
       default:
         return "bg-[#FFF0B3] text-[#172B4D] border-[#FFE380]";
     }
   };
 
-  const getWaterStressStyles = (level: string) => {
+  const getRwhStatusLabel = (status: RwhStatus) => {
+    if (status === "verified_has_rwh") return "HAS RWH";
+    if (status === "verified_no_rwh") return "NO RWH";
+    return "UNKNOWN";
+  };
+
+  const getWaterStressStyles = (level: WaterStressLevel) => {
     switch (level) {
       case "Safe":
         return "bg-[#E3FCEF] text-[#006644]";
@@ -66,6 +82,10 @@ export default function LocationRow({ location, isSelected, onClick }: LocationR
     }
   };
 
+  const acres = location.water.estimatedRoofArea 
+    ? (location.water.estimatedRoofArea * 4 / 4046.86).toFixed(1)
+    : "0";
+
   return (
     <div
       onClick={onClick}
@@ -79,7 +99,7 @@ export default function LocationRow({ location, isSelected, onClick }: LocationR
           {location.name}
         </h5>
         <span className="text-[11px] font-mono font-medium text-[#5E6C84] bg-[#F4F5F7] px-1.5 py-0.5 rounded-sm flex-shrink-0">
-          {location.landAreaAcres} ac
+          {acres} ac
         </span>
       </div>
 
@@ -87,7 +107,7 @@ export default function LocationRow({ location, isSelected, onClick }: LocationR
       <div className="flex items-center gap-1 text-[11px] text-[#5E6C84]">
         <MapPin size={12} className="text-[#8993A4] flex-shrink-0" />
         <span className="truncate">
-          {location.taluk ? `${location.taluk}, ` : ""}{location.district}, {location.state}
+          {location.district}, {location.state}
         </span>
       </div>
 
@@ -103,22 +123,24 @@ export default function LocationRow({ location, isSelected, onClick }: LocationR
           {/* Water Stress Badge */}
           <span
             className={`text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wide ${getWaterStressStyles(
-              location.waterStressLevel
+              location.water.waterStressLevel
             )}`}
           >
-            {location.waterStressLevel}
+            {location.water.waterStressLevel}
           </span>
         </div>
 
         {/* RWH Status Badge */}
         <span
           className={`text-[9.5px] font-bold px-2 py-0.5 border rounded-sm truncate max-w-[120px] ${getRwhStatusStyles(
-            location.rwhStatus
+            location.water.rainwaterHarvesting.status
           )}`}
         >
-          {location.rwhStatus === "Verified - Has RWH" ? "HAS RWH" : location.rwhStatus === "Verified - No RWH" ? "NO RWH" : "UNKNOWN"}
+          {getRwhStatusLabel(location.water.rainwaterHarvesting.status)}
         </span>
       </div>
     </div>
   );
-}
+};
+
+export default LocationRow;

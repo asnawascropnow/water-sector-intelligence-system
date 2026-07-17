@@ -1,17 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { 
-  SlidersHorizontal, 
-  Map, 
-  List, 
-  Eye, 
-  Trash2, 
-  Columns, 
-  LayoutGrid, 
-  Filter, 
-  RefreshCw,
-  ChevronLeft,
-  ChevronRight
-} from "lucide-react";
+import { SlidersHorizontal, List, Columns, Map, ChevronRight, ChevronLeft } from "lucide-react";
 import { Location, Category, RwhStatus, WaterStressLevel, Assignment, TeamMember } from "../data/mockData.types";
 import FilterPanel from "../components/explorer/FilterPanel";
 import LocationList from "../components/explorer/LocationList";
@@ -52,7 +40,6 @@ export default function Explorer({
   // --- FILTERS STATE ---
   const [selectedState, setSelectedState] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
-  const [selectedTaluk, setSelectedTaluk] = useState("");
   const [selectedRwhStatuses, setSelectedRwhStatuses] = useState<RwhStatus[]>([]);
   const [selectedWaterStressLevels, setSelectedWaterStressLevels] = useState<WaterStressLevel[]>([]);
   const [minArea, setMinArea] = useState(0);
@@ -71,7 +58,6 @@ export default function Explorer({
   const handleResetFilters = () => {
     setSelectedState("");
     setSelectedDistrict("");
-    setSelectedTaluk("");
     setSelectedCategories([]);
     setSelectedRwhStatuses([]);
     setSelectedWaterStressLevels([]);
@@ -90,7 +76,6 @@ export default function Explorer({
       // 1. Cascading Geography Filter
       if (selectedState && loc.state !== selectedState) return false;
       if (selectedDistrict && loc.district !== selectedDistrict) return false;
-      if (selectedTaluk && loc.taluk !== selectedTaluk) return false;
 
       // 2. Multi-select Categories
       if (selectedCategories.length > 0 && !selectedCategories.includes(loc.category)) {
@@ -98,20 +83,21 @@ export default function Explorer({
       }
 
       // 3. Multi-select RWH Status
-      if (selectedRwhStatuses.length > 0 && !selectedRwhStatuses.includes(loc.rwhStatus)) {
+      if (selectedRwhStatuses.length > 0 && !selectedRwhStatuses.includes(loc.water.rainwaterHarvesting.status)) {
         return false;
       }
 
       // 4. Multi-select Water Stress
       if (
         selectedWaterStressLevels.length > 0 &&
-        !selectedWaterStressLevels.includes(loc.waterStressLevel)
+        !selectedWaterStressLevels.includes(loc.water.waterStressLevel)
       ) {
         return false;
       }
 
-      // 5. Land Area Range
-      if (loc.landAreaAcres < minArea || loc.landAreaAcres > maxArea) {
+      // 5. Land Area Range (calculated back from estimatedRoofArea)
+      const acres = loc.water.estimatedRoofArea ? (loc.water.estimatedRoofArea * 4 / 4046.86) : 0;
+      if (acres < minArea || acres > maxArea) {
         return false;
       }
 
@@ -146,14 +132,12 @@ export default function Explorer({
         const query = searchQuery.toLowerCase();
         const matchesName = loc.name.toLowerCase().includes(query);
         const matchesDistrict = loc.district.toLowerCase().includes(query);
-        const matchesTaluk = loc.taluk?.toLowerCase().includes(query) || false;
-        const matchesPincode = loc.pincode.includes(query);
+        const matchesPincode = loc.postalCode.includes(query);
         const matchesState = loc.state.toLowerCase().includes(query);
 
         if (
           !matchesName &&
           !matchesDistrict &&
-          !matchesTaluk &&
           !matchesPincode &&
           !matchesState
         ) {
@@ -168,7 +152,6 @@ export default function Explorer({
     assignments,
     selectedState,
     selectedDistrict,
-    selectedTaluk,
     selectedCategories,
     selectedRwhStatuses,
     selectedWaterStressLevels,
@@ -181,14 +164,15 @@ export default function Explorer({
   ]);
 
   // Synchronized callback for selecting a location from list/map
-  const handleLocationSelect = (loc: Location) => {
+  const handleLocationSelect = (loc: Location | null) => {
     setSelectedLocation(loc);
-    // Automatically open the detail panel
-    setIsDrawerOpen(true);
-    
-    // Automatically collapse filters and list to view the map clearly (reduce panels!)
-    setIsFilterCollapsed(true);
-    setIsListCollapsed(true);
+    if (loc) {
+      setIsDrawerOpen(true);
+      setIsFilterCollapsed(true);
+      setIsListCollapsed(true);
+    } else {
+      setIsDrawerOpen(false);
+    }
   };
 
   return (
@@ -205,7 +189,7 @@ export default function Explorer({
           </p>
         </div>
 
-        {/* Dynamic Toolbar with quick individual collapsible toggle buttons */}
+        {/* Dynamic Toolbar */}
         <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
           {/* Toggle Filter Panel */}
           <button
@@ -290,7 +274,6 @@ export default function Explorer({
         
         {/* 1. COLLAPSIBLE FILTER PANEL */}
         {isFilterCollapsed ? (
-          /* Slim vertical strip to expand */
           <div 
             onClick={() => setIsFilterCollapsed(false)}
             className="w-[36px] h-full flex-shrink-0 bg-white dark:bg-[#0a0a0a] border border-neutral-200/80 dark:border-neutral-800/80 hover:bg-neutral-50 dark:hover:bg-neutral-900/50 rounded-sm cursor-pointer flex flex-col items-center py-4 justify-between group transition-all"
@@ -305,7 +288,6 @@ export default function Explorer({
             <ChevronRight size={13} className="text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-white transition-all transform group-hover:translate-x-0.5" />
           </div>
         ) : (
-          /* Full Filter Panel with collapse trigger handle */
           <div className="w-[240px] xl:w-[270px] h-full flex-shrink-0 flex flex-col relative">
             <FilterPanel
               locations={locations}
@@ -314,8 +296,6 @@ export default function Explorer({
               setSelectedState={setSelectedState}
               selectedDistrict={selectedDistrict}
               setSelectedDistrict={setSelectedDistrict}
-              selectedTaluk={selectedTaluk}
-              setSelectedTaluk={setSelectedTaluk}
               selectedCategories={selectedCategories}
               setSelectedCategories={setSelectedCategories}
               selectedRwhStatuses={selectedRwhStatuses}
@@ -336,7 +316,6 @@ export default function Explorer({
 
               onReset={handleResetFilters}
             />
-            {/* Edge overlay collapse button */}
             <button
               onClick={() => setIsFilterCollapsed(true)}
               className="absolute -right-3 top-1/2 -translate-y-1/2 w-3.5 h-16 bg-white dark:bg-[#0a0a0a] border-y border-r border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 rounded-r-sm flex items-center justify-center cursor-pointer shadow-xs z-20 group"
@@ -350,7 +329,6 @@ export default function Explorer({
         {/* 2. COLLAPSIBLE DIRECTORY LIST */}
         {(viewMode === "list" || viewMode === "split") && (
           isListCollapsed ? (
-            /* Slim vertical strip to expand list */
             <div 
               onClick={() => setIsListCollapsed(false)}
               className="w-[36px] h-full flex-shrink-0 bg-white dark:bg-[#0a0a0a] border border-neutral-200/80 dark:border-neutral-800/80 hover:bg-neutral-50 dark:hover:bg-neutral-900/50 rounded-sm cursor-pointer flex flex-col items-center py-4 justify-between group transition-all"
@@ -365,7 +343,6 @@ export default function Explorer({
               <ChevronRight size={13} className="text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-white transition-all transform group-hover:translate-x-0.5" />
             </div>
           ) : (
-            /* Full List Column with collapse trigger handle */
             <div className={`h-full flex flex-col flex-shrink-0 relative ${
               viewMode === "list" 
                 ? "flex-1" 
@@ -376,7 +353,6 @@ export default function Explorer({
                 selectedLocationId={selectedLocation?.id || null}
                 onLocationSelect={handleLocationSelect}
               />
-              {/* Edge overlay collapse button if in split mode */}
               {viewMode === "split" && (
                 <button
                   onClick={() => setIsListCollapsed(true)}
@@ -400,7 +376,6 @@ export default function Explorer({
               onOpenDrawer={() => setIsDrawerOpen(true)}
             />
 
-            {/* Quick-expand floating bubble triggers over the map when collapsed */}
             {(isFilterCollapsed || isListCollapsed) && (
               <div className="absolute top-4 left-4 z-[500] flex flex-col gap-2 pointer-events-auto">
                 {isFilterCollapsed && (

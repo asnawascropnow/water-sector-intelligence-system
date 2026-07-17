@@ -62,8 +62,8 @@ export default function PageShell({
         />
 
         {/* Scrollable Content Pane */}
-        <main id="main-content-area" className="flex-1 overflow-y-auto">
-          <div className="max-w-[1550px] w-full mx-auto px-6 py-6 md:px-8 md:py-8">
+        <main id="main-content-area" className="flex-1 overflow-y-auto flex flex-col">
+          <div className="w-full flex-1 flex flex-col">
             {children}
           </div>
         </main>

@@ -23,22 +23,23 @@ import {
   BarChart3,
   TrendingUp,
 } from "lucide-react";
-import { Location, Assignment, TeamMember, Priority, WorkStatus, Team, ActivityLogEntry, MeetingNote, DocumentRef } from "../../data/mockData.types";
+import { Location, Assignment, TeamMember, Priority, WorkStatus, Team, ActivityLogEntry, MeetingNote, DocumentRef, RwhStatus, WaterStressLevel } from "../../data/mockData.types";
 
 // Helper for water consumption profile & index scoring
 export function getWaterMetrics(loc: Location) {
   const numId = parseInt(loc.id.replace(/\D/g, "")) || 1;
-  const sizeFactor = loc.landAreaAcres;
+  const sizeFactor = loc.water.estimatedRoofArea ? (loc.water.estimatedRoofArea * 4 / 4046.86) : 3.5;
   
   const dailyUsage = Math.round(sizeFactor * 12 + (numId % 5) * 4 + 8); // kL
   const monthlyUsage = dailyUsage * 30;
   const annualUsage = dailyUsage * 365;
-  const ratePerKl = loc.waterSource.toLowerCase().includes("tanker") ? 135 : 95;
+  const waterSrc = loc.water.waterSource || "Mixed";
+  const ratePerKl = waterSrc.toLowerCase().includes("tanker") ? 135 : 95;
   const monthlyCost = monthlyUsage * ratePerKl;
 
-  const isTanker = loc.waterSource.toLowerCase().includes("tanker");
-  const isBorewell = loc.waterSource.toLowerCase().includes("borewell") || isTanker || (numId % 2 === 0);
-  const isMunicipal = loc.waterSource.toLowerCase().includes("municipal") || loc.waterSource.toLowerCase().includes("mixed") || !isBorewell;
+  const isTanker = waterSrc.toLowerCase().includes("tanker");
+  const isBorewell = waterSrc.toLowerCase().includes("borewell") || isTanker || (numId % 2 === 0);
+  const isMunicipal = waterSrc.toLowerCase().includes("municipal") || waterSrc.toLowerCase().includes("mixed") || !isBorewell;
 
   const tankerUsage = isTanker ? Math.round(dailyUsage * 0.45) : 0;
   const borewellUsage = isBorewell ? Math.round(dailyUsage * (isTanker ? 0.35 : 0.75)) : Math.round(dailyUsage * 0.15);
@@ -46,18 +47,18 @@ export function getWaterMetrics(loc: Location) {
 
   const solarInstalled = (numId % 3) === 0 ? "Installed (120 kWp)" : "Not Installed (180 kWp potential)";
 
-  const savingPct = loc.rwhStatus === "Verified - Has RWH" ? 12 : 38;
+  const savingPct = loc.water.rainwaterHarvesting.status === "verified_has_rwh" ? 12 : 38;
   const savingConsumption = Math.round(monthlyUsage * (savingPct / 100));
   const savingCost = Math.round(monthlyCost * (savingPct / 100));
 
   let score = 15;
-  if (loc.waterStressLevel === "Over-Exploited") score += 35;
-  else if (loc.waterStressLevel === "Critical") score += 25;
-  else if (loc.waterStressLevel === "Semi-Critical") score += 15;
+  if (loc.water.waterStressLevel === "Over-Exploited") score += 35;
+  else if (loc.water.waterStressLevel === "Critical") score += 25;
+  else if (loc.water.waterStressLevel === "Semi-Critical") score += 15;
   else score += 5;
 
-  if (loc.rwhStatus === "Verified - No RWH") score += 30;
-  else if (loc.rwhStatus === "Unknown") score += 15;
+  if (loc.water.rainwaterHarvesting.status === "verified_no_rwh") score += 30;
+  else if (loc.water.rainwaterHarvesting.status === "unknown") score += 15;
 
   if (isTanker) score += 15;
   else if (isBorewell) score += 10;
@@ -147,12 +148,18 @@ export default function DetailDrawer({
   // Find assignment record if it exists
   const assignment = assignments.find((a) => a.locationId === location.id);
 
+  const getRwhStatusLabel = (status: RwhStatus) => {
+    if (status === "verified_has_rwh") return "Has RWH";
+    if (status === "verified_no_rwh") return "No RWH";
+    return "Unknown";
+  };
+
   // Status and badge styles
-  const getRwhStatusStyles = (status: string) => {
+  const getRwhStatusStyles = (status: RwhStatus) => {
     switch (status) {
-      case "Verified - Has RWH":
+      case "verified_has_rwh":
         return "bg-[#E3FCEF] text-[#006644] border border-[#ABF5D1]";
-      case "Verified - No RWH":
+      case "verified_no_rwh":
         return "bg-[#FFEBE6] text-[#BF2600] border border-[#FFBDAD]";
       default:
         return "bg-[#FFF0B3] text-[#172B4D] border border-[#FFE380]";
@@ -174,15 +181,14 @@ export default function DetailDrawer({
     }
   };
 
-  const getConfidenceStyles = (conf: string) => {
-    switch (conf) {
-      case "Official Dataset":
-        return "bg-[#DEEBFF] text-[#0747A6] border border-[#B3D4FF]";
-      case "Crowd-Verified":
-        return "bg-[#E3FCEF] text-[#006644] border border-[#ABF5D1]";
-      default:
-        return "bg-[#F4F5F7] text-[#5E6C84] border border-[#DFE1E6]";
+  const getConfidenceStyles = (conf: number) => {
+    if (conf >= 90) {
+      return "bg-[#E3FCEF] text-[#006644] border border-[#ABF5D1]";
     }
+    if (conf >= 60) {
+      return "bg-[#DEEBFF] text-[#0747A6] border border-[#B3D4FF]";
+    }
+    return "bg-[#F4F5F7] text-[#5E6C84] border border-[#DFE1E6]";
   };
 
   const getPriorityStyles = (priority: Priority) => {
@@ -369,17 +375,17 @@ export default function DetailDrawer({
             </span>
             <span
               className={`text-[10px] font-bold px-2 py-0.5 rounded-[2px] uppercase tracking-wide ${getRwhStatusStyles(
-                location.rwhStatus
+                location.water.rainwaterHarvesting.status
               )}`}
             >
-              {location.rwhStatus}
+              {getRwhStatusLabel(location.water.rainwaterHarvesting.status)}
             </span>
             <span
               className={`text-[10px] font-bold px-2 py-0.5 rounded-[2px] uppercase tracking-wide ${getWaterStressStyles(
-                location.waterStressLevel
+                location.water.waterStressLevel
               )}`}
             >
-              Stress: {location.waterStressLevel}
+              Stress: {location.water.waterStressLevel}
             </span>
           </div>
 
@@ -439,19 +445,19 @@ export default function DetailDrawer({
                     </p>
                   </div>
                   <div>
-                    <p className="text-[11px] text-[#5E6C84]">Taluk</p>
+                    <p className="text-[11px] text-[#5E6C84]">Sub Category</p>
                     <p className="font-semibold text-[#172B4D] mt-0.5">
-                      {location.taluk || "—"}
+                      {location.subCategory || "—"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[11px] text-[#5E6C84]">State & Pincode</p>
+                    <p className="text-[11px] text-[#5E6C84]">State & Postal Code</p>
                     <p className="font-semibold text-[#172B4D] mt-0.5">
-                      {location.state} - {location.pincode}
+                      {location.state} - {location.postalCode}
                     </p>
                   </div>
                 </div>
-              </div>              {/* Section: Water Profile & Opportunity Index Scoring */}
+              {/* Section: Water Profile & Opportunity Index Scoring */}
               {(() => {
                 const metrics = getWaterMetrics(location);
                 return (
@@ -580,7 +586,7 @@ export default function DetailDrawer({
 
                         <div>
                           <p className="text-[11px] text-[#5E6C84]">Primary Inflow Sources</p>
-                          <p className="font-semibold text-[#172B4D] mt-0.5">{location.waterSource}</p>
+                          <p className="font-semibold text-[#172B4D] mt-0.5">{location.water.waterSource || "Mixed"}</p>
                         </div>
                         <div>
                           <p className="text-[11px] text-[#5E6C84]">Approximate Monthly Bill</p>
@@ -602,7 +608,7 @@ export default function DetailDrawer({
                         <div>
                           <p className="text-[11px] text-[#5E6C84]">Estimated Land Area</p>
                           <p className="font-bold text-[#172B4D] mt-0.5 text-[13px] font-mono">
-                            {location.landAreaAcres} Acres
+                            {location.water.estimatedRoofArea ? `${(location.water.estimatedRoofArea * 4 / 4046.86).toFixed(1)} Acres` : "—"}
                           </p>
                         </div>
                         <div>
@@ -620,11 +626,11 @@ export default function DetailDrawer({
                             </span>
                           </div>
                           <span className={`inline-block text-[9px] font-extrabold px-1.5 py-0.5 rounded-sm uppercase mt-1 ${
-                            location.legallyObligatedForRwh 
+                            location.water.estimatedRoofArea && location.water.estimatedRoofArea > 404
                               ? "bg-red-50 text-red-700 border border-red-200"
                               : "bg-gray-50 text-gray-500 border border-gray-200"
                           }`}>
-                            {location.legallyObligatedForRwh ? "YES - MANDATED" : "NO OBLIGATION"}
+                            {location.water.estimatedRoofArea && location.water.estimatedRoofArea > 404 ? "YES - MANDATED" : "NO OBLIGATION"}
                           </span>
                         </div>
 
@@ -658,34 +664,22 @@ export default function DetailDrawer({
               <div className="bg-white border border-[#DFE1E6] rounded-[3px] p-4 shadow-[0_1px_2px_rgba(9,30,66,0.08)] space-y-3">
                 <div className="flex items-center gap-2 text-xs font-bold text-[#5E6C84] uppercase tracking-wider pb-1.5 border-b border-[#F4F5F7]">
                   <User size={14} className="text-[#6554C0]" />
-                  <span>Institutional Representative</span>
+                  <span>Institutional Contact</span>
                 </div>
-                {location.contactName ? (
+                {(location.phone || location.email || location.website) ? (
                   <div className="grid grid-cols-2 gap-3.5 text-xs">
-                    <div>
-                      <p className="text-[11px] text-[#5E6C84]">Name</p>
-                      <p className="font-semibold text-[#172B4D] mt-0.5">
-                        {location.contactName}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[11px] text-[#5E6C84]">Designation</p>
-                      <p className="font-semibold text-[#172B4D] mt-0.5 text-gray-600">
-                        {location.contactDesignation || "—"}
-                      </p>
-                    </div>
                     <div>
                       <p className="text-[11px] text-[#5E6C84]">Phone Number</p>
                       <p className="font-semibold text-[#172B4D] mt-0.5 flex items-center gap-1">
                         <Phone size={10} className="text-gray-400" />
-                        {location.contactPhone || "—"}
+                        {location.phone || "—"}
                       </p>
                     </div>
                     <div>
                       <p className="text-[11px] text-[#5E6C84]">Email Address</p>
-                      <p className="font-semibold text-[#172B4D] mt-0.5 flex items-center gap-1 truncate" title={location.contactEmail}>
+                      <p className="font-semibold text-[#172B4D] mt-0.5 flex items-center gap-1 truncate" title={location.email}>
                         <Mail size={10} className="text-gray-400 flex-shrink-0" />
-                        <span className="truncate">{location.contactEmail || "—"}</span>
+                        <span className="truncate">{location.email || "—"}</span>
                       </p>
                     </div>
                     {location.website && (
@@ -714,34 +708,40 @@ export default function DetailDrawer({
               <div className="bg-white border border-[#DFE1E6] rounded-[3px] p-4 shadow-[0_1px_2px_rgba(9,30,66,0.08)] space-y-3">
                 <div className="flex items-center gap-2 text-xs font-bold text-[#5E6C84] uppercase tracking-wider pb-1.5 border-b border-[#F4F5F7]">
                   <History size={14} className="text-[#00875A]" />
-                  <span>Data Provenance</span>
+                  <span>Data Provenance & Geometry</span>
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div>
                     <p className="text-[11px] text-[#5E6C84]">Primary Source</p>
-                    <p className="font-semibold text-[#172B4D] mt-0.5">
-                      {location.dataSource}
+                    <p className="font-semibold text-[#172B4D] mt-0.5 capitalize">
+                      {location.geometry.source.replace("_", " ")}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[11px] text-[#5E6C84]">Confidence Level</p>
+                    <p className="text-[11px] text-[#5E6C84]">Geometry Confidence</p>
                     <span
                       className={`inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wide mt-1 ${getConfidenceStyles(
-                        location.confidenceLevel
+                        location.geometry.confidence
                       )}`}
                     >
-                      {location.confidenceLevel}
+                      {location.geometry.confidence}% confidence
                     </span>
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-[#5E6C84]">Geometry Type</p>
+                    <p className="font-semibold text-[#172B4D] mt-0.5 font-mono">
+                      {location.geometry.geojson.type}
+                    </p>
                   </div>
                   <div>
                     <p className="text-[11px] text-[#5E6C84]">Last Audited On</p>
                     <p className="font-semibold text-[#172B4D] mt-0.5 flex items-center gap-1">
                       <Calendar size={12} className="text-gray-400" />
-                      {location.lastVerifiedDate}
+                      {new Date(location.geometry.lastUpdated).toLocaleDateString("en-IN")}
                     </p>
                   </div>
                 </div>
-              </div>
+              </div>          </div>
             </div>
           ) : (
             /* Tab 2: Assignment & CRM Board */

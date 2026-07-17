@@ -1,35 +1,85 @@
-export type Category = "Industry" | "Manufacturing" | "University" | "College" | "School" | "Hospital" | "Apartment/Residential" | "Other";
-export type RwhStatus = "Verified - Has RWH" | "Verified - No RWH" | "Unknown";
+export type Category =
+  | "Industry"
+  | "Manufacturing"
+  | "Mining"
+  | "School"
+  | "College"
+  | "University"
+  | "Hospital"
+  | "Apartment/Residential"
+  | "Hotel"
+  | "Government Building"
+  | "Data Centre";
+export type RwhStatus = "verified_has_rwh" | "verified_no_rwh" | "unknown";
 export type WaterStressLevel = "Safe" | "Semi-Critical" | "Critical" | "Over-Exploited";
 export type ConfidenceLevel = "Official Dataset" | "Crowd-Verified" | "Unverified Estimate";
 export type LeadStage = "Identified" | "Contacted" | "Proposal Sent" | "Won" | "Lost";
 
+export interface GeoJSONGeometry {
+  type: "Point" | "Polygon" | "MultiPolygon" | "LineString" | "GeometryCollection";
+  coordinates: any;
+}
+
+export interface OrganizationGeometry {
+  source: 
+    | "google_places"
+    | "openstreetmap"
+    | "government_gis"
+    | "manual_survey"
+    | "satellite_detection"
+    | "drone_mapping"
+    | "uploaded_geojson"
+    | "uploaded_kml"
+    | "uploaded_shapefile"
+    | "estimated";
+  confidence: number;
+  lastUpdated: string;
+  geojson: GeoJSONGeometry;
+}
+
+export interface OrganizationWater {
+  estimatedConsumption: number | null;
+  estimatedRoofArea: number | null;
+  waterSource: string | null;
+  groundwaterDependency: number | null;
+  rainwaterHarvesting: {
+    status: RwhStatus;
+    verified: boolean;
+  };
+  waterStressLevel: WaterStressLevel;
+}
+
+export interface OrganizationCRM {
+  assignedTo: string | null;
+  status: string;
+  priority: "High" | "Medium" | "Low" | null;
+}
+
 export interface Location {
   id: string;
+  placeId?: string;
   name: string;
   category: Category;
+  subCategory: string;
   address: string;
-  taluk: string;
+  website: string;
+  phone: string;
+  email: string;
   district: string;
   state: string;
-  pincode: string;
-  lat: number;
-  lng: number;
-  landAreaAcres: number;
-  waterSource: string; // e.g. "Borewell", "Municipal (Cauvery)", "Tanker", "Mixed"
-  rwhStatus: RwhStatus;
-  waterStressLevel: WaterStressLevel;
-  legallyObligatedForRwh: boolean;
-  confidenceLevel: ConfidenceLevel;
-  contactName?: string;
-  contactDesignation?: string;
-  contactPhone?: string;
-  contactEmail?: string;
-  website?: string;
-  dataSource: string; // e.g. "AISHE", "KSPCB Consent Order", "Manual Site Visit"
-  lastVerifiedDate: string; // ISO date
-  leadStage: LeadStage;
-  notes?: string;
+  country: string;
+  postalCode: string;
+  location: {
+    lat: number;
+    lng: number;
+  };
+  geometry: OrganizationGeometry;
+  water: OrganizationWater;
+  crm: OrganizationCRM;
+  projects: any[];
+  funding: any[];
+  documents: any[];
+  timeline: any[];
 }
 
 export type Priority = "High" | "Medium" | "Low";
@@ -73,5 +123,16 @@ export interface Assignment {
   meetingNotes: MeetingNote[];
   documents: DocumentRef[];
   createdDate: string;
+}
+
+export interface GooglePlaceDetails {
+  placeId: string;
+  formattedAddress?: string;
+  website?: string;
+  formattedPhoneNumber?: string;
+  rating?: number;
+  businessStatus?: string;
+  photos?: string[];
+  reviewsCount?: number;
 }
 

@@ -115,7 +115,7 @@ export default function Dashboard({
   const [kpiSearchText, setKpiSearchText] = useState("");
   const [kpiActiveTab, setKpiActiveTab] = useState<"all" | "high-priority" | "unverified">("all");
   const [mapSearchText, setMapSearchText] = useState("");
-  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>({ lat: 12.9716, lng: 77.5946 }); // default Bengaluru
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>({ lat: 20.5937, lng: 78.9629 }); // default India
   const [customToast, setCustomToast] = useState<string | null>(null);
   const [opportunitySearch, setOpportunitySearch] = useState("");
 
@@ -147,18 +147,22 @@ export default function Dashboard({
       School: 0,
       Hospital: 0,
       "Apartment/Residential": 0,
-      Other: 0,
-      Mining: 2, // realistic mock data placeholders
-      DataCentres: 4,
+      Mining: 0,
+      "Data Centre": 0,
+      Hotel: 0,
+      "Government Building": 0,
+      // Placeholders for legacy/other metrics
       SoftwareParks: 6,
-      Hotels: 5,
-      GovernmentBuildings: 5,
-      MunicipalBodies: 3
+      MunicipalBodies: 3,
+      Other: 0
     };
 
     locations.forEach((loc) => {
-      if (loc.category in counts) {
-        counts[loc.category as keyof typeof counts] += 1;
+      const cat = loc.category;
+      if (cat in counts) {
+        counts[cat as keyof typeof counts] += 1;
+      } else {
+        counts.Other += 1;
       }
     });
 
@@ -186,12 +190,10 @@ export default function Dashboard({
     { id: "kpi-sch", label: "Schools Cataloged", val: statsBreakdown.School, trend: "-1%", isUp: false, cat: "School", icon: Users, bg: "bg-white", border: "border-[#DFE1E6]" },
     { id: "kpi-hosp", label: "Hospitals", val: statsBreakdown.Hospital, trend: "+18%", isUp: true, cat: "Hospital", icon: Activity, bg: "bg-white", border: "border-[#DFE1E6]" },
     { id: "kpi-apt", label: "Apartments & Housing", val: statsBreakdown["Apartment/Residential"], trend: "+9%", isUp: true, cat: "Apartment/Residential", icon: Shield, bg: "bg-white", border: "border-[#DFE1E6]" },
-    { id: "kpi-dc", label: "Data Centres", val: statsBreakdown.DataCentres, trend: "+24% Peak", isUp: true, cat: "Other", icon: Cpu, bg: "bg-white", border: "border-[#DFE1E6]" },
-    { id: "kpi-sp", label: "Software Parks", val: statsBreakdown.SoftwareParks, trend: "+6% MoM", isUp: true, cat: "Other", icon: Briefcase, bg: "bg-white", border: "border-[#DFE1E6]" },
-    { id: "kpi-hotel", label: "Hotels & Hospitality", val: statsBreakdown.Hotels, trend: "+5% MoM", isUp: true, cat: "Other", icon: Compass, bg: "bg-white", border: "border-[#DFE1E6]" },
-    { id: "kpi-govt", label: "Government Buildings", val: statsBreakdown.GovernmentBuildings, trend: "Stable", isUp: true, cat: "Other", icon: Shield, bg: "bg-white", border: "border-[#DFE1E6]" },
-    { id: "kpi-mine", label: "Mining Operations", val: statsBreakdown.Mining, trend: "+12%", isUp: true, cat: "Other", icon: FlameKindling, bg: "bg-white", border: "border-[#DFE1E6]" },
-    { id: "kpi-muni", label: "Municipal Bodies", val: statsBreakdown.MunicipalBodies, trend: "+1%", isUp: true, cat: "Other", icon: Globe, bg: "bg-white", border: "border-[#DFE1E6]" },
+    { id: "kpi-dc", label: "Data Centres", val: statsBreakdown["Data Centre"], trend: "+24% Peak", isUp: true, cat: "Data Centre", icon: Cpu, bg: "bg-white", border: "border-[#DFE1E6]" },
+    { id: "kpi-hotel", label: "Hotels & Hospitality", val: statsBreakdown.Hotel, trend: "+5% MoM", isUp: true, cat: "Hotel", icon: Compass, bg: "bg-white", border: "border-[#DFE1E6]" },
+    { id: "kpi-govt", label: "Government Buildings", val: statsBreakdown["Government Building"], trend: "Stable", isUp: true, cat: "Government Building", icon: Shield, bg: "bg-white", border: "border-[#DFE1E6]" },
+    { id: "kpi-mine", label: "Mining Operations", val: statsBreakdown.Mining, trend: "+12%", isUp: true, cat: "Mining", icon: FlameKindling, bg: "bg-white", border: "border-[#DFE1E6]" },
   ];
 
   // Filter KPI Row dynamically
@@ -220,7 +222,7 @@ export default function Dashboard({
   const waterSourceDistributionData = useMemo(() => {
     const list: Record<string, number> = {};
     locations.forEach(l => {
-      const src = l.waterSource.split(" ")[0]; // e.g. "Borewell", "Municipal"
+      const src = (l.water.waterSource || "Mixed").split(" ")[0]; // e.g. "Borewell", "Municipal"
       list[src] = (list[src] || 0) + 1;
     });
     return Object.keys(list).map(key => ({
@@ -234,7 +236,7 @@ export default function Dashboard({
     const counts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
     locations.forEach((loc) => {
       const assign = activeAssigns.find(a => a.locationId === loc.id);
-      if (loc.waterStressLevel === "Over-Exploited" || loc.waterStressLevel === "Critical") {
+      if (loc.water.waterStressLevel === "Over-Exploited" || loc.water.waterStressLevel === "Critical") {
         counts.Critical += 1;
       } else if (assign?.priority === "High") {
         counts.High += 1;
@@ -256,17 +258,19 @@ export default function Dashboard({
   const aiOpportunities = useMemo(() => {
     return locations.map((loc) => {
       let score = 50; // base score
-      if (loc.waterStressLevel === "Over-Exploited") score += 25;
-      if (loc.waterStressLevel === "Critical") score += 20;
-      if (loc.rwhStatus === "Verified - No RWH") score += 20;
-      if (loc.rwhStatus === "Unknown") score += 10;
+      if (loc.water.waterStressLevel === "Over-Exploited") score += 25;
+      if (loc.water.waterStressLevel === "Critical") score += 20;
+      if (loc.water.rainwaterHarvesting.status === "verified_no_rwh") score += 20;
+      if (loc.water.rainwaterHarvesting.status === "unknown") score += 10;
       if (loc.category === "Industry" || loc.category === "Manufacturing") score += 15;
-      if (loc.landAreaAcres > 500) score += 10;
-      if (loc.legallyObligatedForRwh) score += 10;
+      
+      const acres = loc.water.estimatedRoofArea ? (loc.water.estimatedRoofArea * 4 / 4046.86) : 5;
+      if (acres > 500) score += 10;
+      if (loc.water.estimatedRoofArea && loc.water.estimatedRoofArea > 404) score += 10;
 
       // Calculate Estimated Savings in Litres/yr and mock Revenue
-      const estimatedSavingsLitres = Math.round(loc.landAreaAcres * 45000);
-      const estRevenueInRupees = Math.round(loc.landAreaAcres * 2200);
+      const estimatedSavingsLitres = Math.round(acres * 45000);
+      const estRevenueInRupees = Math.round(acres * 2200);
 
       // Eligibility for CSR funding
       const fundingEligible = loc.category !== "Industry" && loc.category !== "Manufacturing" ? "Highly Eligible (Atal Bhujal)" : "Co-Funded ESG Only";
@@ -301,10 +305,10 @@ export default function Dashboard({
     e.preventDefault();
     const target = locations.find(l => l.name.toLowerCase().includes(mapSearchText.toLowerCase()) || l.district.toLowerCase().includes(mapSearchText.toLowerCase()));
     if (target) {
-      setMapCenter({ lat: target.lat, lng: target.lng });
+      setMapCenter(target.location);
       setCustomToast(`Centered GIS Map on: ${target.name}`);
     } else {
-      alert("No matching nodes found. Try searching for 'BMS', 'Ramaiah', or 'ITC'.");
+      alert("No matching nodes found. Try searching for a valid node name or district.");
     }
   };
 
@@ -361,7 +365,7 @@ export default function Dashboard({
             Good Morning, Specialist Akash. Welcome to WIOS.
           </h2>
           <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed">
-            Akash Bhumi & CropNow’s central command node is currently tracking <strong className="text-slate-900 dark:text-white font-semibold">{totalLocationsCount} industrial & institutional Digital Twins</strong> across Karnataka. Regional ground aquifers are experiencing typical monsoonal recharge levels.
+            Akash Bhumi & CropNow’s central command node is currently tracking <strong className="text-slate-900 dark:text-white font-semibold">{totalLocationsCount} industrial & institutional Digital Twins</strong> across India. Regional ground aquifers are experiencing typical monsoonal recharge levels.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch gap-2.5 z-10 w-full md:w-auto">
@@ -533,7 +537,7 @@ export default function Dashboard({
                 <GoogleMap
                 defaultCenter={mapCenter}
                 center={mapCenter}
-                defaultZoom={11}
+                defaultZoom={5}
                 mapId={GOOGLE_MAPS_MAP_ID}
                 gestureHandling="greedy"
                 style={{ width: "100%", height: "100%" }}
@@ -558,22 +562,23 @@ export default function Dashboard({
 
                 {/* Markers plot dynamically from locations array */}
                 {locations.map((loc) => {
-                  // Determine marker color depending on the active GIS layer filter
-                  let markerColor = "#FF991F"; // Amber default
+                  // Determine marker color depending on the active GIS layer
+                  let markerColor = "#3b82f6";
                   let detailsLabel = "";
 
                   if (dashboardMapLayer === "stress") {
-                    detailsLabel = `Stress: ${loc.waterStressLevel}`;
-                    if (loc.waterStressLevel === "Safe") markerColor = "#00875A";
-                    else if (loc.waterStressLevel === "Semi-Critical") markerColor = "#FF991F";
-                    else if (loc.waterStressLevel === "Critical") markerColor = "#DE350B";
+                    detailsLabel = `Stress: ${loc.water.waterStressLevel}`;
+                    if (loc.water.waterStressLevel === "Safe") markerColor = "#00875A";
+                    else if (loc.water.waterStressLevel === "Semi-Critical") markerColor = "#FF991F";
+                    else if (loc.water.waterStressLevel === "Critical") markerColor = "#DE350B";
                     else markerColor = "#7A869A";
                   } else if (dashboardMapLayer === "groundwater") {
-                    detailsLabel = `Source: ${loc.waterSource}`;
-                    markerColor = loc.waterSource.includes("Borewell") ? "#DE350B" : "#0052CC";
+                    detailsLabel = `Source: ${loc.water.waterSource || "Mixed"}`;
+                    markerColor = loc.water.waterSource && loc.water.waterSource.includes("Borewell") ? "#DE350B" : "#0052CC";
                   } else if (dashboardMapLayer === "rainfall") {
-                    detailsLabel = `RWH Obligation: ${loc.legallyObligatedForRwh ? "Legally Mandated" : "Optional"}`;
-                    markerColor = loc.rwhStatus === "Verified - Has RWH" ? "#00875A" : "#DE350B";
+                    const isObligated = loc.water.estimatedRoofArea && loc.water.estimatedRoofArea > 404;
+                    detailsLabel = `RWH Obligation: ${isObligated ? "Legally Mandated" : "Optional"}`;
+                    markerColor = loc.water.rainwaterHarvesting.status === "verified_has_rwh" ? "#00875A" : "#DE350B";
                   } else if (dashboardMapLayer === "density") {
                     detailsLabel = `Category: ${loc.category}`;
                     markerColor = loc.category === "Industry" ? "#0052CC" : "#6554C0";
@@ -582,7 +587,7 @@ export default function Dashboard({
                   return (
                     <AdvancedMarker
                       key={loc.id}
-                      position={{ lat: loc.lat, lng: loc.lng }}
+                      position={loc.location}
                       onClick={() => {
                         setSelectedLoc(loc);
                         setIsDrawerOpen(true);
@@ -600,14 +605,13 @@ export default function Dashboard({
                 {/* Bounded area highlighting for selected node */}
                 {selectedLoc && (
                   <GoogleCircle
-                    center={{ lat: selectedLoc.lat, lng: selectedLoc.lng }}
+                    center={selectedLoc.location}
                     radius={1600}
                     options={{
                       strokeColor: "#6366f1",
                       fillColor: "#6366f1",
                       fillOpacity: 0.15,
                       strokeWeight: 1.5,
-                      // removed unsupported strokeDashOptions (not part of CircleOptions)
                     }}
                   />
                 )}
@@ -615,7 +619,7 @@ export default function Dashboard({
                 {/* InfoWindow for selected marker */}
                 {selectedLoc && (
                   <InfoWindow
-                    position={{ lat: selectedLoc.lat, lng: selectedLoc.lng }}
+                    position={selectedLoc.location}
                     onCloseClick={() => setSelectedLoc(null)}
                   >
                     <div className="p-1 min-w-[180px] text-slate-900 text-xs">
@@ -623,9 +627,9 @@ export default function Dashboard({
                       <p className="text-[10px] text-slate-500 mt-0.5 m-0">{selectedLoc.district}, {selectedLoc.state}</p>
                       <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between">
                         <span className="text-[9px] font-bold text-slate-700 uppercase bg-slate-50 px-1 py-0.5 rounded">
-                          {dashboardMapLayer === "stress" ? `Stress: ${selectedLoc.waterStressLevel}` :
-                           dashboardMapLayer === "groundwater" ? `Source: ${selectedLoc.waterSource}` :
-                           dashboardMapLayer === "rainfall" ? `RWH: ${selectedLoc.legallyObligatedForRwh ? "Mandated" : "Optional"}` :
+                          {dashboardMapLayer === "stress" ? `Stress: ${selectedLoc.water.waterStressLevel}` :
+                           dashboardMapLayer === "groundwater" ? `Source: ${selectedLoc.water.waterSource || "Mixed"}` :
+                           dashboardMapLayer === "rainfall" ? `RWH: ${selectedLoc.water.estimatedRoofArea && selectedLoc.water.estimatedRoofArea > 404 ? "Mandated" : "Optional"}` :
                            `Category: ${selectedLoc.category}`}
                         </span>
                         <button 
@@ -986,8 +990,10 @@ export default function Dashboard({
               <tbody className="divide-y divide-gray-100">
                 {locations.slice(0, 6).map((loc) => {
                   let stressBadge = "bg-emerald-50 text-emerald-700 border-emerald-200";
-                  if (loc.waterStressLevel === "Critical") stressBadge = "bg-amber-50 text-amber-700 border-amber-200";
-                  if (loc.waterStressLevel === "Over-Exploited") stressBadge = "bg-red-50 text-red-700 border-red-200";
+                  if (loc.water.waterStressLevel === "Critical") stressBadge = "bg-amber-50 text-amber-700 border-amber-200";
+                  if (loc.water.waterStressLevel === "Over-Exploited") stressBadge = "bg-red-50 text-red-700 border-red-200";
+
+                  const rwhStatusLabel = loc.water.rainwaterHarvesting.status === "verified_has_rwh" ? "Has RWH" : loc.water.rainwaterHarvesting.status === "verified_no_rwh" ? "No RWH" : "Unknown";
 
                   return (
                     <tr 
@@ -1005,16 +1011,16 @@ export default function Dashboard({
                       <td className="py-3 text-gray-600">{loc.category}</td>
                       <td className="py-3">
                         <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase ${stressBadge}`}>
-                          {loc.waterStressLevel}
+                          {loc.water.waterStressLevel}
                         </span>
                       </td>
-                      <td className="py-3 text-gray-500 font-mono text-[10px]">{loc.waterSource.split(" ")[0]}</td>
+                      <td className="py-3 text-gray-500 font-mono text-[10px]">{(loc.water.waterSource || "Mixed").split(" ")[0]}</td>
                       <td className="py-3">
                         <span className={`w-2 h-2 rounded-full inline-block mr-1.5 ${
-                          loc.rwhStatus === "Verified - Has RWH" ? "bg-emerald-500" :
-                          loc.rwhStatus === "Verified - No RWH" ? "bg-red-500" : "bg-amber-500"
+                          loc.water.rainwaterHarvesting.status === "verified_has_rwh" ? "bg-emerald-500" :
+                          loc.water.rainwaterHarvesting.status === "verified_no_rwh" ? "bg-red-500" : "bg-amber-500"
                         }`} />
-                        <span className="text-[11px] text-gray-700">{loc.rwhStatus.replace("Verified - ", "")}</span>
+                        <span className="text-[11px] text-gray-700">{rwhStatusLabel}</span>
                       </td>
                       <td className="py-3 text-right">
                         <button 

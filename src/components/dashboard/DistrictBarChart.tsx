@@ -19,7 +19,7 @@ export default function DistrictBarChart({ locations }: DistrictBarChartProps) {
   // 1. Filter for "Verified - No RWH" or "Unknown" locations
   const targetLocations = locations.filter(
     (loc) =>
-      loc.rwhStatus === "Verified - No RWH" || loc.rwhStatus === "Unknown"
+      loc.water.rainwaterHarvesting.status === "verified_no_rwh" || loc.water.rainwaterHarvesting.status === "unknown"
   );
 
   // 2. Aggregate count per district
