@@ -120,6 +120,14 @@ export async function nextActionRecommendations(q: Queryable): Promise<Recommend
   return recs;
 }
 
+/** One short sentence: why this organization is worth contacting. */
+function opportunityReason(r: { org_type: string; reasons: string[] | null; confidence: string | null }) {
+  const first = r.reasons?.[0] ?? "";
+  const why = (first.includes(" — ") ? first.split(" — ")[1] : first).replace(/\s*\(type inferred from name\)/, "");
+  const sentence = why ? why[0].toUpperCase() + why.slice(1).replace(/\.?$/, ".") : "";
+  return `${r.org_type} with no contact yet. ${sentence} Confidence: ${r.confidence ?? "Unknown"} (AI Inference).`.replace(/\s+/g, " ");
+}
+
 export async function opportunityRecommendations(q: Queryable): Promise<RecommendationDraft[]> {
   const { rows } = await q.query<{ id: number; name: string; org_type: string; reasons: string[] | null; confidence: string | null }>(
     `SELECT org.id, org.name, org.org_type, org.intelligence->'reasons' AS reasons, org.intelligence->>'confidence' AS confidence
@@ -137,7 +145,7 @@ export async function opportunityRecommendations(q: Queryable): Promise<Recommen
     opportunity_id: null,
     action_type: "add_to_crm",
     title: `Contact ${r.name}`,
-    reason: `High-potential ${r.org_type.toLowerCase()} with no previous contact. ${(r.reasons ?? []).slice(0, 2).join(". ")}. Data confidence: ${r.confidence ?? "Unknown"} (AI Inference).`,
+    reason: opportunityReason(r),
     priority: r.confidence === "High" ? "High" : "Medium",
     assigned_to: null,
   }));

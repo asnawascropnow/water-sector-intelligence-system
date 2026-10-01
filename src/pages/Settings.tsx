@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { api } from "../lib/api";
 import { useApp } from "../context/AppContext";
-import { Badge, Button, Card, Field, Input, PageHeader } from "../components/ui";
+import { Palette, Server, Users } from "lucide-react";
+import { Avatar, Badge, Button, Card, Field, Input, PageHeader } from "../components/ui";
 
 export default function Settings() {
   const { users, reloadUsers, toast, system, theme, setTheme } = useApp();
@@ -30,14 +31,18 @@ export default function Settings() {
 
   return (
     <>
-      <PageHeader title="Settings" />
-      <div className="grid lg:grid-cols-2 gap-5 items-start">
-        <Card title="Team">
-          <ul className="divide-y divide-neutral-100 dark:divide-neutral-900 mb-4">
+      <PageHeader title="Settings" subtitle="Team, system status and appearance." />
+      <div className="grid lg:grid-cols-2 gap-6 items-start">
+        <Card icon={Users} title="Team" description="People who can be assigned organizations and follow-ups">
+          <ul className="divide-y divide-[var(--border)] -mt-2 mb-5">
             {users.map((x) => (
-              <li key={x.id} className="flex items-center justify-between py-2 text-sm">
-                <div>
-                  <span className="font-medium">{x.name}</span> <span className="text-neutral-500 text-xs">{[x.role, x.email].filter(Boolean).join(" · ")}</span>
+              <li key={x.id} className="flex items-center justify-between gap-3 py-3 text-sm">
+                <div className="flex items-center gap-3 min-w-0">
+                  <Avatar name={x.name} size={32} />
+                  <div className="min-w-0">
+                    <div className="font-medium">{x.name}</div>
+                    <div className="text-[var(--text-3)] text-xs truncate">{[x.role, x.email].filter(Boolean).join(" · ") || "Team member"}</div>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {!x.active && <Badge>Inactive</Badge>}
@@ -48,7 +53,7 @@ export default function Settings() {
               </li>
             ))}
           </ul>
-          <form onSubmit={addUser} className="grid grid-cols-3 gap-2 items-end">
+          <form onSubmit={addUser} className="grid sm:grid-cols-3 gap-3 items-end rounded-lg bg-[var(--surface-2)] border border-[var(--border)] p-4">
             <Field label="Name">
               <Input value={u.name} onChange={(e) => setU({ ...u, name: e.target.value })} />
             </Field>
@@ -58,36 +63,36 @@ export default function Settings() {
             <Field label="Email">
               <Input value={u.email} onChange={(e) => setU({ ...u, email: e.target.value })} />
             </Field>
-            <div className="col-span-3 flex justify-end">
+            <div className="sm:col-span-3 flex justify-end">
               <Button type="submit" variant="primary" loading={busy}>
                 Add team member
               </Button>
             </div>
           </form>
-          <p className="text-[11px] text-neutral-500 mt-3">This MVP has no login yet: choose who you are working as at the bottom of the sidebar. Every change is recorded against that person in the audit log.</p>
+          <p className="text-[11px] text-[var(--text-3)] mt-3">This MVP has no login yet: choose who you are working as at the bottom of the sidebar. Every change is recorded against that person in the audit log.</p>
         </Card>
-        <div className="space-y-5">
-          <Card title="System">
-            <dl className="text-sm space-y-2">
-              <div className="flex justify-between">
-                <dt className="text-neutral-500">Coverage</dt>
+        <div className="space-y-6">
+          <Card icon={Server} title="System">
+            <dl className="text-sm divide-y divide-[var(--border)] -my-2">
+              <div className="flex justify-between gap-4 py-2.5">
+                <dt className="text-[var(--text-3)]">Coverage</dt>
                 <dd>Bengaluru, Karnataka, India</dd>
               </div>
-              <div className="flex justify-between">
-                <dt className="text-neutral-500">Database</dt>
+              <div className="flex justify-between gap-4 py-2.5">
+                <dt className="text-[var(--text-3)]">Database</dt>
                 <dd>{system?.database === "postgres" ? "PostgreSQL + PostGIS" : "Embedded PostgreSQL + PostGIS (PGlite)"}</dd>
               </div>
-              <div className="flex justify-between">
-                <dt className="text-neutral-500">Geocoding</dt>
+              <div className="flex justify-between gap-4 py-2.5">
+                <dt className="text-[var(--text-3)]">Geocoding</dt>
                 <dd>{system?.geocoder === "nominatim" ? "OpenStreetMap Nominatim" : "Off"}</dd>
               </div>
-              <div className="flex justify-between">
-                <dt className="text-neutral-500">AI extraction & web research</dt>
+              <div className="flex justify-between gap-4 py-2.5">
+                <dt className="text-[var(--text-3)]">AI extraction & web research</dt>
                 <dd>{system?.llm ? `On (${system.llmModel})` : "Off — set GEMINI_API_KEY to enable"}</dd>
               </div>
             </dl>
           </Card>
-          <Card title="Appearance">
+          <Card icon={Palette} title="Appearance">
             <div className="flex gap-2">
               <Button variant={theme === "light" ? "primary" : "secondary"} onClick={() => setTheme("light")}>
                 Light

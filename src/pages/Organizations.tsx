@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Search } from "lucide-react";
+import { Building2, Plus, Search, Upload } from "lucide-react";
 import { ORG_TYPE_COLORS, ORG_TYPES, POTENTIAL_LEVELS, type OrgType } from "../../shared/constants";
 import type { Organization } from "../../shared/types";
 import { useApi } from "../lib/useApi";
@@ -25,7 +25,9 @@ export default function Organizations() {
         actions={
           <>
             <Link to="/import">
-              <Button>Import data</Button>
+              <Button>
+                <Upload size={14} /> Import data
+              </Button>
             </Link>
             <Button variant="primary" onClick={() => setCreating(true)}>
               <Plus size={14} /> Add organization
@@ -33,57 +35,58 @@ export default function Organizations() {
           </>
         }
       />
-      <div className="flex flex-wrap gap-2 mb-3">
-        <div className="relative flex-1 min-w-[220px]">
-          <Search size={14} className="absolute left-2.5 top-2.5 text-neutral-400" />
-          <Input className="pl-8" placeholder="Search name, area, address, sector…" value={filters.q} onChange={(e) => setFilters({ ...filters, q: e.target.value })} />
-        </div>
-        <Select className="!w-auto" value={filters.types[0] ?? ""} onChange={(e) => setFilters({ ...filters, types: e.target.value ? [e.target.value as OrgType] : [] })} options={ORG_TYPES} placeholder="All types" aria-label="Type" />
-        <Select className="!w-auto" value={filters.area} onChange={(e) => setFilters({ ...filters, area: e.target.value })} options={areas} placeholder="All areas" aria-label="Area" />
-        <Select
-          className="!w-auto"
-          value={filters.crm}
-          onChange={(e) => setFilters({ ...filters, crm: e.target.value as "" | "in" | "out" })}
-          options={[
-            { value: "out", label: "Not in CRM" },
-            { value: "in", label: "In CRM" },
-          ]}
-          placeholder="CRM: any"
-          aria-label="CRM"
-        />
-        <Select className="!w-auto" value={filters.potential} onChange={(e) => setFilters({ ...filters, potential: e.target.value })} options={POTENTIAL_LEVELS} placeholder="Any potential" aria-label="Potential" />
-        {active && (
-          <Button variant="ghost" onClick={reset}>
-            Clear
-          </Button>
-        )}
-      </div>
       <ErrorNote error={error} />
       {!orgs ? (
         <Spinner />
       ) : (
-        <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 overflow-x-auto">
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)] overflow-hidden">
+      <div className="flex flex-wrap gap-2 p-4 border-b border-[var(--border)]">
+          <div className="relative flex-1 min-w-[220px]">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-3)] pointer-events-none" />
+            <Input className="pl-9" placeholder="Search name, area, address, sector…" value={filters.q} onChange={(e) => setFilters({ ...filters, q: e.target.value })} />
+          </div>
+          <Select className="!w-auto" value={filters.types[0] ?? ""} onChange={(e) => setFilters({ ...filters, types: e.target.value ? [e.target.value as OrgType] : [] })} options={ORG_TYPES} placeholder="All types" aria-label="Type" />
+          <Select className="!w-auto" value={filters.area} onChange={(e) => setFilters({ ...filters, area: e.target.value })} options={areas} placeholder="All areas" aria-label="Area" />
+          <Select
+            className="!w-auto"
+            value={filters.crm}
+            onChange={(e) => setFilters({ ...filters, crm: e.target.value as "" | "in" | "out" })}
+            options={[
+              { value: "out", label: "Not in CRM" },
+              { value: "in", label: "In CRM" },
+            ]}
+            placeholder="CRM: any"
+            aria-label="CRM"
+          />
+          <Select className="!w-auto" value={filters.potential} onChange={(e) => setFilters({ ...filters, potential: e.target.value })} options={POTENTIAL_LEVELS} placeholder="Any potential" aria-label="Potential" />
+          {active && (
+            <Button variant="ghost" onClick={reset}>
+              Clear
+            </Button>
+          )}
+        </div>
+            <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="text-left text-xs text-neutral-500 border-b border-neutral-200 dark:border-neutral-800">
+            <thead className="text-left text-xs text-[var(--text-3)] bg-[var(--surface-2)] border-b border-[var(--border)]">
               <tr>
                 <th className="px-4 py-2.5 font-medium">Organization</th>
                 <th className="px-3 py-2.5 font-medium">Type</th>
                 <th className="px-3 py-2.5 font-medium">Area</th>
                 <th className="px-3 py-2.5 font-medium">Contact</th>
                 <th className="px-3 py-2.5 font-medium">Potential</th>
-                <th className="px-3 py-2.5 font-medium">Data</th>
+                <th className="px-3 py-2.5 font-medium">Confidence</th>
                 <th className="px-3 py-2.5 font-medium">CRM</th>
                 <th className="px-3 py-2.5 font-medium">Added</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100 dark:divide-neutral-900">
+            <tbody className="divide-y divide-[var(--border)]">
               {filtered.slice(0, limit).map((o) => (
-                <tr key={o.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-900/50">
+                <tr key={o.id} className="hover:bg-[var(--surface-2)]">
                   <td className="px-4 py-2.5 max-w-[320px]">
                     <Link to={`/organizations/${o.id}`} className="font-medium hover:underline">
                       {o.name}
                     </Link>
-                    <div className="text-xs text-neutral-500 truncate">{o.sector ?? o.address ?? ""}</div>
+                    <div className="text-xs text-[var(--text-3)] truncate">{o.sector ?? o.address ?? ""}</div>
                   </td>
                   <td className="px-3 py-2.5 whitespace-nowrap">
                     <span className="inline-flex items-center gap-1.5">
@@ -91,10 +94,10 @@ export default function Organizations() {
                       {o.org_type}
                     </span>
                   </td>
-                  <td className="px-3 py-2.5 whitespace-nowrap">{o.area ?? <span className="text-neutral-400">Unknown</span>}</td>
-                  <td className="px-3 py-2.5 text-xs">{o.phone || o.email ? <span>{o.phone ?? o.email}</span> : <span className="text-neutral-400">Unknown</span>}</td>
+                  <td className="px-3 py-2.5 whitespace-nowrap">{o.area ?? <span className="text-[var(--text-3)]">Unknown</span>}</td>
+                  <td className="px-3 py-2.5 text-xs">{o.phone || o.email ? <span>{o.phone ?? o.email}</span> : <span className="text-[var(--text-3)]">Unknown</span>}</td>
                   <td className="px-3 py-2.5">
-                    <PotentialBadge potential={o.intelligence?.potential} />
+                    <PotentialBadge potential={o.intelligence?.potential} short />
                   </td>
                   <td className="px-3 py-2.5">
                     <Badge tone={confidenceTone(o.data_confidence)} title={o.source_label ?? undefined}>
@@ -110,13 +113,14 @@ export default function Organizations() {
                       </button>
                     )}
                   </td>
-                  <td className="px-3 py-2.5 text-xs text-neutral-500 whitespace-nowrap">{formatDate(o.created_at)}</td>
+                  <td className="px-3 py-2.5 text-xs text-[var(--text-3)] whitespace-nowrap">{formatDate(o.created_at)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {!filtered.length && <EmptyState title="No organizations match">Try clearing filters, add one manually, or import a file.</EmptyState>}
-          <div className="flex items-center justify-between px-4 py-2.5 text-xs text-neutral-500 border-t border-neutral-200 dark:border-neutral-800">
+          </div>
+          {!filtered.length && <EmptyState title="No organizations match" icon={Building2}>Try clearing filters, add one manually, or import a file.</EmptyState>}
+          <div className="flex items-center justify-between px-4 py-2.5 text-xs text-[var(--text-3)] border-t border-[var(--border)]">
             <span>
               {Math.min(limit, filtered.length)} of {filtered.length} shown
             </span>

@@ -8,7 +8,7 @@ import { useApi } from "../lib/useApi";
 import { formatDateTime } from "../lib/format";
 import { useApp } from "../context/AppContext";
 import { DuplicatePanel } from "../components/org/OrganizationForm";
-import { Badge, Button, Card, cx, EmptyState, ErrorNote, Field, Input, Modal, PageHeader, ProvenanceTag, Select, Spinner, type Tone } from "../components/ui";
+import { Badge, Button, Card, cx, EmptyState, ErrorNote, Field, Input, Modal, PageHeader, ProvenanceTag, Select, Spinner, Tabs, type Tone } from "../components/ui";
 
 const STATUS_TONE: Record<string, Tone> = { processing: "blue", review: "amber", completed: "green", failed: "red", pending: "neutral", approved: "green", merged: "blue", rejected: "red" };
 const LEVEL: Record<string, { label: string; tone: Tone }> = {
@@ -52,16 +52,16 @@ function Uploader({ onUploaded }: { onUploaded: (id: number) => void }) {
         const f = e.dataTransfer.files[0];
         if (f) upload(f);
       }}
-      className={cx("rounded-lg border-2 border-dashed p-8 text-center transition", drag ? "border-[var(--accent)] bg-blue-50/50 dark:bg-blue-950/30" : "border-neutral-300 dark:border-neutral-700")}
+      className={cx("rounded-xl border-2 border-dashed p-8 text-center transition bg-[var(--surface)]", drag ? "border-[var(--accent)] bg-[var(--accent-soft)]" : "border-[var(--border-strong)]")}
     >
-      <FileUp className="mx-auto text-neutral-400" size={28} />
+      <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent-text)]"><FileUp size={22} /></span>
       <p className="mt-2 text-sm font-medium">Drop a file here or choose one</p>
-      <p className="text-xs text-neutral-500 mt-1">Excel (.xlsx), CSV, PDF or Word (.docx) · up to 15 MB</p>
+      <p className="text-xs text-[var(--text-3)] mt-1">Excel (.xlsx), CSV, PDF or Word (.docx) · up to 15 MB</p>
       <input ref={input} type="file" accept=".xlsx,.csv,.pdf,.docx" hidden onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
       <Button className="mt-3" variant="primary" loading={busy} onClick={() => input.current?.click()}>
         Choose file
       </Button>
-      <p className="text-[11px] text-neutral-500 mt-3 max-w-md mx-auto">
+      <p className="text-[11px] text-[var(--text-3)] mt-3 max-w-md mx-auto">
         Nothing is added to the database until you review it. Spreadsheets need a column for the organization name; other columns (address, phone, email, website, type, sector, pincode, latitude/longitude, contact person) are detected automatically.
       </p>
     </div>
@@ -209,7 +209,7 @@ function ImportReview({ id }: { id: number }) {
         <Spinner label={`Extracting, geocoding and checking duplicates… ${imp.records.length ? `${imp.records.length} records so far` : ""}`} />
       ) : (
         <>
-          {imp.error && <div className={cx("text-xs mb-3", imp.status === "failed" ? "text-red-600" : "text-neutral-500")}>{imp.error}</div>}
+          {imp.error && <div className={cx("text-xs mb-3", imp.status === "failed" ? "text-red-600" : "text-[var(--text-3)]")}>{imp.error}</div>}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
             {[
               ["Organizations found", s.found],
@@ -217,25 +217,26 @@ function ImportReview({ id }: { id: number }) {
               ["Existing", s.existing],
               ["Possible duplicates", s.possible_duplicates],
             ].map(([l, v]) => (
-              <div key={l} className="rounded-md bg-neutral-50 dark:bg-neutral-900 px-3 py-2">
-                <div className="text-xs text-neutral-500">{l}</div>
-                <div className="text-xl font-semibold tabular-nums">{v}</div>
+              <div key={l} className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3">
+                <div className="text-xs text-[var(--text-3)]">{l}</div>
+                <div className="text-2xl font-semibold tabular-nums mt-0.5">{v}</div>
               </div>
             ))}
           </div>
-          <div className="flex flex-wrap items-center gap-2 mb-3 text-xs">
-            {(["pending", "all", "new", "existing", "possible_duplicate"] as const).map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={cx("rounded-full px-2.5 py-1 border cursor-pointer", filter === f ? "bg-neutral-900 text-white border-neutral-900 dark:bg-white dark:text-neutral-900" : "border-neutral-300 dark:border-neutral-700")}
-              >
-                {f === "possible_duplicate" ? "Possible duplicates" : f[0].toUpperCase() + f.slice(1)}
-                {f === "pending" && ` (${s.pending})`}
-              </button>
-            ))}
-            <span className="text-neutral-500 ml-auto">
-              Approved {s.approved} · Merged {s.merged} · Rejected {s.rejected} · extraction: {imp.extraction_method ?? "—"}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <Tabs<typeof filter>
+              value={filter}
+              onChange={setFilter}
+              items={[
+                { value: "pending", label: "To review", count: s.pending },
+                { value: "all", label: "All", count: s.found },
+                { value: "new", label: "New", count: s.new },
+                { value: "existing", label: "Existing", count: s.existing },
+                { value: "possible_duplicate", label: "Possible duplicates", count: s.possible_duplicates },
+              ]}
+            />
+            <span className="text-xs text-[var(--text-3)]">
+              Approved {s.approved} · Merged {s.merged} · Rejected {s.rejected} · Extraction: {imp.extraction_method ?? "—"}
             </span>
           </div>
           {!rows.length ? (
@@ -243,17 +244,17 @@ function ImportReview({ id }: { id: number }) {
           ) : (
             <div className="overflow-x-auto -mx-4">
               <table className="w-full text-sm">
-                <thead className="text-left text-xs text-neutral-500">
-                  <tr className="border-b border-neutral-200 dark:border-neutral-800">
-                    <th className="px-4 py-2 font-medium">Organization</th>
-                    <th className="px-3 py-2 font-medium">Sector / type</th>
-                    <th className="px-3 py-2 font-medium">Address</th>
-                    <th className="px-3 py-2 font-medium">Phone / email</th>
-                    <th className="px-3 py-2 font-medium">Check</th>
-                    <th className="px-4 py-2 font-medium text-right">Action</th>
+                <thead className="text-left text-xs text-[var(--text-3)] bg-[var(--surface-2)]">
+                  <tr className="border-y border-[var(--border)]">
+                    <th className="px-4 py-2.5 font-medium">Organization</th>
+                    <th className="px-3 py-2.5 font-medium">Sector / type</th>
+                    <th className="px-3 py-2.5 font-medium">Address</th>
+                    <th className="px-3 py-2.5 font-medium">Phone / email</th>
+                    <th className="px-3 py-2.5 font-medium">Check</th>
+                    <th className="px-4 py-2.5 font-medium text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral-100 dark:divide-neutral-900 align-top">
+                <tbody className="divide-y divide-[var(--border)] align-top">
                   {rows.map((r) => (
                     <tr key={r.index}>
                       <td className="px-4 py-2.5 min-w-[220px] max-w-[300px]">
@@ -265,25 +266,25 @@ function ImportReview({ id }: { id: number }) {
                         ))}
                       </td>
                       <td className="px-3 py-2.5 text-xs">
-                        <div>{r.data.sector ?? <span className="text-neutral-400">Unknown</span>}</div>
+                        <div>{r.data.sector ?? <span className="text-[var(--text-3)]">Unknown</span>}</div>
                         <div className="flex items-center gap-1 mt-0.5">
                           {r.data.org_type} <ProvenanceTag fs={r.field_sources.org_type} />
                         </div>
                       </td>
                       <td className="px-3 py-2.5 text-xs min-w-[180px] max-w-[260px]">
-                        <div>{r.data.address ?? <span className="text-neutral-400">Unknown</span>}</div>
-                        <div className="text-neutral-500 flex items-center gap-1 mt-0.5">
+                        <div>{r.data.address ?? <span className="text-[var(--text-3)]">Unknown</span>}</div>
+                        <div className="text-[var(--text-3)] flex items-center gap-1 mt-0.5">
                           {[r.data.area, r.data.pincode].filter(Boolean).join(" · ")}
                           {r.data.lat != null ? <ProvenanceTag fs={r.field_sources.location} /> : <Badge tone="amber">No location</Badge>}
                         </div>
                       </td>
                       <td className="px-3 py-2.5 text-xs whitespace-nowrap">
-                        <div>{r.data.phone ?? <span className="text-neutral-400">—</span>}</div>
-                        <div className="text-neutral-500">{r.data.email}</div>
+                        <div>{r.data.phone ?? <span className="text-[var(--text-3)]">—</span>}</div>
+                        <div className="text-[var(--text-3)]">{r.data.email}</div>
                       </td>
                       <td className="px-3 py-2.5">
                         <Badge tone={LEVEL[r.duplicate.level].tone}>{LEVEL[r.duplicate.level].label}</Badge>
-                        {r.duplicate.candidates[0] && <div className="text-[11px] text-neutral-500 mt-1">≈ {r.duplicate.candidates[0].name}</div>}
+                        {r.duplicate.candidates[0] && <div className="text-[11px] text-[var(--text-3)] mt-1">≈ {r.duplicate.candidates[0].name}</div>}
                       </td>
                       <td className="px-4 py-2.5 text-right min-w-[190px]">
                         {r.status !== "pending" ? (
@@ -377,15 +378,15 @@ export default function ImportData() {
             ) : !imports.length ? (
               <EmptyState title="No imports yet" />
             ) : (
-              <ul className="divide-y divide-neutral-100 dark:divide-neutral-900">
+              <ul className="divide-y divide-[var(--border)]">
                 {imports.map((i) => (
                   <li key={i.id}>
-                    <button onClick={() => select(i.id)} className={cx("w-full text-left px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-neutral-900 cursor-pointer", selected === i.id && "bg-neutral-50 dark:bg-neutral-900")}>
+                    <button onClick={() => select(i.id)} className={cx("w-full text-left px-4 py-2.5 hover:bg-[var(--surface-2)] cursor-pointer", selected === i.id && "bg-[var(--surface-2)]")}>
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-sm font-medium truncate">{i.filename}</span>
                         <Badge tone={STATUS_TONE[i.status]}>{i.status}</Badge>
                       </div>
-                      <div className="text-xs text-neutral-500 mt-0.5">
+                      <div className="text-xs text-[var(--text-3)] mt-0.5">
                         {formatDateTime(i.created_at)} · {i.uploaded_by_name ?? "—"} · {i.stats.found} found{i.stats.pending ? ` · ${i.stats.pending} to review` : ""}
                       </div>
                     </button>
@@ -395,7 +396,17 @@ export default function ImportData() {
             )}
           </Card>
         </div>
-        <div>{selected ? <ImportReview key={selected} id={selected} /> : <Card title="Review">Select an import or upload a file to start reviewing.</Card>}</div>
+        <div className="min-w-0">
+          {selected ? (
+            <ImportReview key={selected} id={selected} />
+          ) : (
+            <Card>
+              <EmptyState title="Nothing selected" icon={FileUp}>
+                Upload a file, or pick an earlier import on the left to review its records.
+              </EmptyState>
+            </Card>
+          )}
+        </div>
       </div>
     </>
   );

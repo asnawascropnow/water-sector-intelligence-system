@@ -50,23 +50,24 @@ function iconFor(type: OrgType, inCrm: boolean) {
   return iconCache.get(key)!;
 }
 
-function FocusController({ focusId, markers }: { focusId: number | null; markers: React.MutableRefObject<Map<number, L.Marker>> }) {
+function FocusController({ focusId, markers, openPopup }: { focusId: number | null; markers: React.MutableRefObject<Map<number, L.Marker>>; openPopup: boolean }) {
   const map = useMap();
   useEffect(() => {
     if (!focusId) return;
     const m = markers.current.get(focusId);
     if (!m) return;
     map.flyTo(m.getLatLng(), Math.max(map.getZoom(), 16), { duration: 0.6 });
+    if (!openPopup) return;
     const t = setTimeout(() => m.openPopup(), 650);
     return () => clearTimeout(t);
-  }, [focusId, map, markers]);
+  }, [focusId, map, markers, openPopup]);
   return null;
 }
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex gap-2 text-[12px] leading-5">
-      <span className="w-20 shrink-0 text-neutral-500">{label}</span>
+      <span className="w-20 shrink-0 text-[var(--text-3)]">{label}</span>
       <span className="text-neutral-900 break-words min-w-0">{children}</span>
     </div>
   );
@@ -92,7 +93,7 @@ export function OrgPopupCard({ org, onAddToCrm }: { org: Organization; onAddToCr
       <Row label="Status">{org.crm_status ?? "Not Contacted"}</Row>
       <Row label="Opportunity">
         {org.intelligence?.potential ?? "Unknown"}
-        {org.intelligence?.potential && org.intelligence.potential !== "Unknown" && <span className="text-neutral-500"> (AI Inference)</span>}
+        {org.intelligence?.potential && org.intelligence.potential !== "Unknown" && <span className="text-[var(--text-3)]"> (AI Inference)</span>}
       </Row>
       <div className="flex gap-2 mt-2.5">
         <Link to={`/organizations/${org.id}`} className="flex-1 text-center text-[12px] font-medium rounded border border-neutral-300 px-2 py-1.5 !text-neutral-800 hover:bg-neutral-50">
@@ -120,9 +121,11 @@ interface Props {
   onAddToCrm?: (o: Organization) => void;
   className?: string;
   scrollWheelZoom?: boolean;
+  /** Open the focused marker's popup (off for small preview maps). */
+  openFocusPopup?: boolean;
 }
 
-export default function BengaluruMap({ organizations, focusId = null, onAddToCrm, className, scrollWheelZoom = true }: Props) {
+export default function BengaluruMap({ organizations, focusId = null, onAddToCrm, className, scrollWheelZoom = true, openFocusPopup = true }: Props) {
   const { theme } = useApp();
   const markers = useRef(new Map<number, L.Marker>());
   const located = useMemo(() => organizations.filter((o) => o.lat != null && o.lng != null), [organizations]);
@@ -168,7 +171,7 @@ export default function BengaluruMap({ organizations, focusId = null, onAddToCrm
           </Marker>
         ))}
       </MarkerClusterGroup>
-      <FocusController focusId={focusId} markers={markers} />
+      <FocusController focusId={focusId} markers={markers} openPopup={openFocusPopup} />
     </MapContainer>
   );
 }

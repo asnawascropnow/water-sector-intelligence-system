@@ -6,7 +6,7 @@ import { useApi } from "../lib/useApi";
 import { useApp } from "../context/AppContext";
 import TaskList from "../components/TaskList";
 import TaskDialog from "../components/org/TaskDialog";
-import { Button, Card, cx, ErrorNote, PageHeader, Select, Spinner } from "../components/ui";
+import { Button, Card, ErrorNote, PageHeader, Select, Spinner, Tabs } from "../components/ui";
 
 const SCOPES = [
   { value: "pending", label: "All open" },
@@ -36,22 +36,30 @@ export default function Tasks() {
           </Button>
         }
       />
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        {SCOPES.map((s) => (
-          <button
-            key={s.value}
-            onClick={() => setParams({ scope: s.value })}
-            className={cx("rounded-full px-3 py-1 text-sm border cursor-pointer", scope === s.value ? "bg-neutral-900 text-white border-neutral-900 dark:bg-white dark:text-neutral-900" : "border-neutral-300 dark:border-neutral-700")}
-          >
-            {s.label}
-            {s.value === "overdue" && overdue && overdue.length > 0 && <span className="ml-1.5 rounded-full bg-red-600 text-white text-[10px] px-1.5">{overdue.length}</span>}
-          </button>
-        ))}
-        <span className="flex-1" />
-        <Select className="!w-auto" value={who} onChange={(e) => setWho(e.target.value)} options={activeUsers.map((u) => ({ value: u.id, label: u.name }))} placeholder="Everyone" aria-label="Assigned to" />
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <Tabs
+          value={scope}
+          onChange={(v) => setParams({ scope: v })}
+          items={SCOPES.map((x) => ({ ...x, count: x.value === "overdue" ? overdue?.length ?? 0 : undefined, alert: x.value === "overdue" }))}
+        />
+        <Select className="!w-48" value={who} onChange={(e) => setWho(e.target.value)} options={activeUsers.map((u) => ({ value: u.id, label: u.name }))} placeholder="Everyone" aria-label="Assigned to" />
       </div>
       <ErrorNote error={error} />
-      <Card bodyClassName="py-1">{!tasks ? <Spinner /> : <TaskList tasks={tasks} emptyText={scope === "overdue" ? "Nothing overdue" : "No follow-ups here"} />}</Card>
+      <Card bodyClassName="px-5 py-2">
+        {!tasks ? (
+          <Spinner />
+        ) : (
+          <TaskList
+            tasks={tasks}
+            emptyText={scope === "overdue" ? "Nothing overdue" : "No follow-ups here"}
+            emptyAction={
+              <Button variant="primary" onClick={() => setCreating(true)}>
+                <Plus size={14} /> New follow-up
+              </Button>
+            }
+          />
+        )}
+      </Card>
       <TaskDialog open={creating} onClose={() => setCreating(false)} />
     </>
   );

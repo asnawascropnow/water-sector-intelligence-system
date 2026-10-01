@@ -67,7 +67,7 @@ export default function InteractionForm({ opportunityId, ownerId, onDone }: { op
         {type === "call_scheduled" ? "Add the scheduled call as a task" : "Schedule a follow-up"}
       </label>
       {withFollowUp && (
-        <div className="grid grid-cols-2 gap-3 rounded-md border border-neutral-200 dark:border-neutral-800 p-3">
+        <div className="grid grid-cols-2 gap-3 rounded-md border border-[var(--border)] p-3">
           <Field label="Task" className="col-span-2">
             <Input value={fu.title} onChange={(e) => setFu({ ...fu, title: e.target.value })} placeholder="e.g. Call Operations Manager" />
           </Field>

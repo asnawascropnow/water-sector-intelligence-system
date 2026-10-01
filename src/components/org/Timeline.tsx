@@ -25,15 +25,15 @@ const DOT: Record<string, string> = {
 export default function Timeline({ activities }: { activities: Activity[] }) {
   if (!activities.length) return <EmptyState title="No activity yet" />;
   return (
-    <ol className="relative border-l border-neutral-200 dark:border-neutral-800 ml-2 space-y-4">
+    <ol className="relative border-l border-[var(--border)] ml-2 space-y-4">
       {activities.map((a) => (
         <li key={a.id} className="ml-4">
           <span className={`absolute -left-[5px] mt-1.5 h-2.5 w-2.5 rounded-full ${DOT[a.type] ?? "bg-neutral-300"}`} />
           <div className="flex flex-wrap items-baseline gap-x-2">
-            <time className="text-xs font-medium text-neutral-500 tabular-nums w-14 shrink-0">{formatDate(a.occurred_at)}</time>
-            <span className="text-sm text-neutral-800 dark:text-neutral-200">{a.summary}</span>
+            <time className="text-xs font-medium text-[var(--text-3)] tabular-nums w-14 shrink-0">{formatDate(a.occurred_at)}</time>
+            <span className="text-sm text-[var(--text)]">{a.summary}</span>
           </div>
-          {a.actor_name && !a.summary.includes(a.actor_name) && <div className="text-[11px] text-neutral-500 ml-16">by {a.actor_name}</div>}
+          {a.actor_name && !a.summary.includes(a.actor_name) && <div className="text-[11px] text-[var(--text-3)] ml-16">by {a.actor_name}</div>}
         </li>
       ))}
     </ol>

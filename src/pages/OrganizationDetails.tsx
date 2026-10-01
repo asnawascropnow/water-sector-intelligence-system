@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { Bot, ExternalLink, Pencil, Plus, Search } from "lucide-react";
+import { Bot, Building2, ExternalLink, GitMerge, History, KanbanSquare, ListChecks, Pencil, PhoneCall, Plus, Search, Sparkles, Users } from "lucide-react";
 import { CALL_STATUSES, CRM_STATUSES, PILOT_STATUSES, PROPOSAL_STATUSES } from "../../shared/constants";
 import type { Activity, Contact, Opportunity, Organization, Recommendation, Task } from "../../shared/types";
 import { api } from "../lib/api";
@@ -15,7 +15,7 @@ import TaskDialog from "../components/org/TaskDialog";
 import Timeline from "../components/org/Timeline";
 import TaskList from "../components/TaskList";
 import RecommendationList from "../components/RecommendationList";
-import { Badge, Button, Card, confidenceTone, ErrorNote, Field, Input, Modal, PotentialBadge, ProvenanceTag, Select, Spinner, statusTone, Textarea } from "../components/ui";
+import { Badge, Button, Card, confidenceTone, EmptyState, ErrorNote, Field, Input, Modal, PotentialBadge, ProvenanceTag, Select, Spinner, statusTone, Textarea } from "../components/ui";
 
 interface Detail {
   merged_into?: number;
@@ -32,9 +32,9 @@ function InfoRow({ label, value, fs, children }: { label: string; value?: React.
   const empty = value === null || value === undefined || value === "";
   return (
     <div className="grid grid-cols-[110px_1fr] gap-2 py-1.5 text-sm">
-      <dt className="text-neutral-500">{label}</dt>
+      <dt className="text-[var(--text-3)]">{label}</dt>
       <dd className="min-w-0 break-words flex flex-wrap items-center gap-1.5">
-        {children ?? (empty ? <span className="text-neutral-400">Unknown</span> : value)}
+        {children ?? (empty ? <span className="text-[var(--text-3)]">Unknown</span> : value)}
         {!empty && fs && <ProvenanceTag fs={fs} />}
       </dd>
     </div>
@@ -75,17 +75,17 @@ function CrmPanel({ opp, contacts }: { opp: Detail["opportunity"] & object; cont
           <Select value={opp.pilot_status} onChange={(e) => patch({ pilot_status: e.target.value })} options={PILOT_STATUSES} />
         </Field>
       </div>
-      <dl className="grid grid-cols-3 gap-2 text-sm rounded-md bg-neutral-50 dark:bg-neutral-900 px-3 py-2">
+      <dl className="grid grid-cols-3 gap-2 text-sm rounded-md bg-[var(--surface-2)] px-3 py-2">
         <div>
-          <dt className="text-xs text-neutral-500">Last contact</dt>
+          <dt className="text-xs text-[var(--text-3)]">Last contact</dt>
           <dd>{opp.last_contact_at ? formatDate(opp.last_contact_at) : "Never"}</dd>
         </div>
         <div>
-          <dt className="text-xs text-neutral-500">Last activity</dt>
+          <dt className="text-xs text-[var(--text-3)]">Last activity</dt>
           <dd>{relativeDays(opp.last_activity_at)}</dd>
         </div>
         <div>
-          <dt className="text-xs text-neutral-500">Next follow-up</dt>
+          <dt className="text-xs text-[var(--text-3)]">Next follow-up</dt>
           <dd>{opp.next_follow_up ? dueLabel(opp.next_follow_up) : "None scheduled"}</dd>
         </div>
       </dl>
@@ -116,6 +116,7 @@ function ContactsCard({ orgId, contacts }: { orgId: number; contacts: Contact[] 
   }
   return (
     <Card
+      icon={Users}
       title="Contacts"
       actions={
         <Button size="sm" onClick={() => setAdding(true)}>
@@ -124,7 +125,7 @@ function ContactsCard({ orgId, contacts }: { orgId: number; contacts: Contact[] 
       }
     >
       {!contacts.length ? (
-        <p className="text-sm text-neutral-500">No contact people recorded.</p>
+        <EmptyState title="No contact people yet" icon={Users} compact />
       ) : (
         <ul className="space-y-2">
           {contacts.map((ct) => (
@@ -132,8 +133,8 @@ function ContactsCard({ orgId, contacts }: { orgId: number; contacts: Contact[] 
               <div className="font-medium flex items-center gap-2">
                 {ct.name} {ct.is_primary && <Badge tone="blue">Primary</Badge>}
               </div>
-              <div className="text-xs text-neutral-500">{[ct.designation, ct.phone, ct.email].filter(Boolean).join(" · ") || "No details"}</div>
-              {ct.source_label && <div className="text-[11px] text-neutral-400">Source: {ct.source_label}</div>}
+              <div className="text-xs text-[var(--text-3)]">{[ct.designation, ct.phone, ct.email].filter(Boolean).join(" · ") || "No details"}</div>
+              {ct.source_label && <div className="text-[11px] text-[var(--text-3)]">Source: {ct.source_label}</div>}
             </li>
           ))}
         </ul>
@@ -213,6 +214,7 @@ function IntelligenceCard({ org, suggestions }: { org: Organization; suggestions
 
   return (
     <Card
+      icon={Sparkles}
       title="Intelligence"
       actions={
         <>
@@ -231,25 +233,25 @@ function IntelligenceCard({ org, suggestions }: { org: Organization; suggestions
         <Badge tone="purple">AI Inference</Badge>
       </div>
       {intel.reasons?.length ? (
-        <ul className="list-disc ml-5 text-sm text-neutral-700 dark:text-neutral-300 space-y-0.5">
+        <ul className="list-disc ml-5 text-sm text-[var(--text-2)] space-y-0.5">
           {intel.reasons.map((r) => (
             <li key={r}>{r}</li>
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-neutral-500">Not assessed yet.</p>
+        <p className="text-sm text-[var(--text-3)]">Not assessed yet.</p>
       )}
-      {intel.assessedAt && <p className="text-[11px] text-neutral-400 mt-1">Opportunity agent · {formatDate(intel.assessedAt, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</p>}
+      {intel.assessedAt && <p className="text-[11px] text-[var(--text-3)] mt-1">Opportunity agent · {formatDate(intel.assessedAt, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</p>}
 
       <div className="mt-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Water-related information</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-3)]">Water-related information</h3>
           <button onClick={() => setAddingWater((v) => !v)} className="text-xs text-[var(--accent)] hover:underline cursor-pointer">
             {addingWater ? "Cancel" : "Add"}
           </button>
         </div>
         {addingWater && (
-          <div className="mt-2 space-y-2 rounded-md border border-neutral-200 dark:border-neutral-800 p-3">
+          <div className="mt-2 space-y-2 rounded-md border border-[var(--border)] p-3">
             <Textarea value={water.text} onChange={(e) => setWater({ ...water, text: e.target.value })} placeholder="e.g. Uses 2 borewells and ~20 tankers/month (told by facility manager)" />
             <div className="grid grid-cols-2 gap-2">
               <Select value={water.provenance} onChange={(e) => setWater({ ...water, provenance: e.target.value })} options={["Verified", "Unverified", "Estimated"]} />
@@ -267,29 +269,29 @@ function IntelligenceCard({ org, suggestions }: { org: Organization; suggestions
             {intel.waterInfo.map((w, i) => (
               <li key={i} className="text-sm">
                 {w.text} <ProvenanceTag fs={{ provenance: w.provenance, source: w.source }} />
-                {w.source && <div className="text-[11px] text-neutral-500 break-all">Source: {w.source}</div>}
+                {w.source && <div className="text-[11px] text-[var(--text-3)] break-all">Source: {w.source}</div>}
               </li>
             ))}
           </ul>
         ) : (
-          !addingWater && <p className="text-sm text-neutral-400 mt-1">Unknown</p>
+          !addingWater && <p className="text-sm text-[var(--text-3)] mt-1">Unknown</p>
         )}
       </div>
 
       {suggestions.length > 0 && (
         <div className="mt-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-2">Suggestions from the enrichment agent</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-3)] mb-2">Suggestions from the enrichment agent</h3>
           <ul className="space-y-2">
             {suggestions.map((s) => {
               const p = s.payload as { field: string; value: string | { lat: number; lng: number }; source: string; provenance: string; note?: string };
               return (
-                <li key={s.id} className="rounded-md border border-neutral-200 dark:border-neutral-800 p-2.5 text-sm">
+                <li key={s.id} className="rounded-md border border-[var(--border)] p-2.5 text-sm">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <span className="text-neutral-500">{p.field.replace("_", " ")}: </span>
+                      <span className="text-[var(--text-3)]">{p.field.replace("_", " ")}: </span>
                       <span className="font-medium break-words">{typeof p.value === "string" ? p.value : `${p.value.lat.toFixed(5)}, ${p.value.lng.toFixed(5)}`}</span>{" "}
                       <ProvenanceTag fs={{ provenance: p.provenance as never, source: p.source }} />
-                      <div className="text-[11px] text-neutral-500 break-all mt-0.5">
+                      <div className="text-[11px] text-[var(--text-3)] break-all mt-0.5">
                         {p.note} · Source: {/^https?:/.test(p.source) ? <a href={p.source} target="_blank" rel="noreferrer" className="underline">{p.source}</a> : p.source}
                       </div>
                     </div>
@@ -344,17 +346,17 @@ function MergeDialog({ org, open, onClose }: { org: Organization; open: boolean;
         </Button>
       }
     >
-      <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
+      <p className="text-sm text-[var(--text-2)] mb-3">
         Use this when the same organization exists twice. Contacts, timeline, tasks and CRM data move to the selected record; missing fields are filled in. This record is then hidden.
       </p>
       <Input placeholder="Search organization…" value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
       <ul className="mt-2 space-y-1">
         {matches.map((o) => (
           <li key={o.id}>
-            <label className="flex items-center gap-2 text-sm rounded px-2 py-1.5 hover:bg-neutral-50 dark:hover:bg-neutral-900 cursor-pointer">
+            <label className="flex items-center gap-2 text-sm rounded px-2 py-1.5 hover:bg-[var(--surface-2)] cursor-pointer">
               <input type="radio" checked={target === o.id} onChange={() => setTarget(o.id)} />
               <span>{o.name}</span>
-              <span className="text-xs text-neutral-500">{o.area}</span>
+              <span className="text-xs text-[var(--text-3)]">{o.area}</span>
             </label>
           </li>
         ))}
@@ -379,13 +381,13 @@ export default function OrganizationDetails() {
 
   return (
     <>
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
-          <Link to="/organizations" className="text-xs text-neutral-500 hover:underline">
+          <Link to="/organizations" className="text-xs text-[var(--text-3)] hover:underline">
             ← Organizations
           </Link>
-          <h1 className="text-xl font-semibold tracking-tight mt-1">{o.name}</h1>
-          <div className="flex flex-wrap items-center gap-2 mt-1.5">
+          <h1 className="text-[22px] leading-7 font-semibold tracking-tight mt-1.5">{o.name}</h1>
+          <div className="flex flex-wrap items-center gap-2 mt-2">
             <Badge>{o.org_type}</Badge>
             <PotentialBadge potential={o.intelligence?.potential} />
             <Badge tone={confidenceTone(o.data_confidence)} title="How complete and verified this record is">
@@ -399,7 +401,7 @@ export default function OrganizationDetails() {
             <Pencil size={13} /> Edit
           </Button>
           <Button variant="ghost" onClick={() => setMergeOpen(true)}>
-            Merge duplicate
+            <GitMerge size={14} /> Merge duplicate
           </Button>
           {!opportunity && (
             <Button variant="primary" onClick={() => setCrmOpen(true)}>
@@ -410,15 +412,15 @@ export default function OrganizationDetails() {
       </div>
 
       {recommendations.length > 0 && (
-        <Card title="AI recommendation" className="mb-5">
+        <Card icon={Bot} title="AI recommendation" className="mb-6">
           <RecommendationList items={recommendations} />
         </Card>
       )}
 
-      <div className="grid xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] gap-5 items-start">
-        <div className="space-y-5">
-          <Card title="Basic information">
-            <dl className="divide-y divide-neutral-100 dark:divide-neutral-900">
+      <div className="grid xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] gap-6 items-start">
+        <div className="space-y-6">
+          <Card icon={Building2} title="Basic information">
+            <dl className="divide-y divide-[var(--border)]">
               <InfoRow label="Name" value={o.name} fs={fs.name} />
               <InfoRow label="Type" value={o.org_type === "Other" && fs.org_type?.provenance === "Unknown" ? null : o.org_type} fs={fs.org_type} />
               <InfoRow label="Sector" value={o.sector} fs={fs.sector} />
@@ -442,21 +444,20 @@ export default function OrganizationDetails() {
               <InfoRow label="Source" value={o.source_label} />
             </dl>
             {o.lat != null && (
-              <div className="h-48 mt-3 rounded-md overflow-hidden border border-neutral-200 dark:border-neutral-800">
-                <BengaluruMap organizations={[o]} focusId={o.id} className="h-full w-full" scrollWheelZoom={false} />
+              <div className="h-56 mt-4 rounded-lg overflow-hidden border border-[var(--border)]">
+                <BengaluruMap organizations={[o]} focusId={o.id} className="h-full w-full" scrollWheelZoom={false} openFocusPopup={false} />
               </div>
             )}
           </Card>
           <IntelligenceCard org={o} suggestions={suggestions} />
-          <ContactsCard orgId={o.id} contacts={contacts} />
         </div>
 
-        <div className="space-y-5">
-          <Card title="CRM">
+        <div className="space-y-6">
+          <Card icon={KanbanSquare} title="CRM">
             {opportunity ? (
               <CrmPanel opp={opportunity} contacts={contacts} />
             ) : (
-              <div className="text-sm text-neutral-600 dark:text-neutral-400">
+              <div className="text-sm text-[var(--text-2)]">
                 This organization is in the discovery database but not in the CRM.
                 <div className="mt-3">
                   <Button variant="primary" onClick={() => setCrmOpen(true)}>
@@ -467,11 +468,13 @@ export default function OrganizationDetails() {
             )}
           </Card>
           {opportunity && (
-            <Card title="Record interaction">
+            <Card icon={PhoneCall} title="Record interaction" description="Contact attempts, calls, proposals and notes">
               <InteractionForm opportunityId={opportunity.id} ownerId={opportunity.owner_id} />
             </Card>
           )}
+          <ContactsCard orgId={o.id} contacts={contacts} />
           <Card
+            icon={ListChecks}
             title="Follow-ups"
             actions={
               <Button size="sm" onClick={() => setTaskOpen(true)}>
@@ -482,7 +485,7 @@ export default function OrganizationDetails() {
           >
             <TaskList tasks={tasks} showOrg={false} />
           </Card>
-          <Card title="Activity timeline">
+          <Card icon={History} title="Activity timeline">
             <Timeline activities={activities} />
           </Card>
         </div>

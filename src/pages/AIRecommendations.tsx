@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { Bot, CalendarCheck, RefreshCw } from "lucide-react";
 import type { DailyBrief } from "../../shared/types";
 import { api } from "../lib/api";
 import { useApi } from "../lib/useApi";
@@ -57,24 +57,28 @@ export default function AIRecommendations() {
       {!brief ? (
         <Spinner />
       ) : (
-        <div className="grid lg:grid-cols-[1fr_300px] gap-5 items-start">
-          <Card title={`Recommendations (${brief.recommendations.length})`}>
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_320px] gap-6 items-start">
+          <section className="min-w-0">
+            <div className="flex items-baseline justify-between mb-3">
+              <h2 className="text-sm font-semibold">Recommendations</h2>
+              <span className="text-xs text-[var(--text-3)]">{brief.recommendations.length} open · highest priority first</span>
+            </div>
             <RecommendationList items={brief.recommendations} />
-          </Card>
-          <div className="space-y-5">
-            <Card title="Today's actions">
+          </section>
+          <div className="space-y-6 lg:sticky lg:top-6">
+            <Card icon={CalendarCheck} title="Today's actions" bodyClassName="px-5 py-3">
               <TodaysActions brief={brief} />
             </Card>
-            <Card title="How the agents work">
+            <Card icon={Bot} title="How the agents work">
               <dl className="space-y-3 text-sm">
                 {agents.map(([n, d]) => (
                   <div key={n}>
                     <dt className="font-medium">{n}</dt>
-                    <dd className="text-neutral-600 dark:text-neutral-400 text-xs mt-0.5">{d}</dd>
+                    <dd className="text-[var(--text-2)] text-xs mt-0.5">{d}</dd>
                   </div>
                 ))}
               </dl>
-              <p className="text-[11px] text-neutral-500 mt-3">Agents never contact organizations. All outreach is done by the team.</p>
+              <p className="text-[11px] text-[var(--text-3)] mt-3">Agents never contact organizations. All outreach is done by the team.</p>
             </Card>
           </div>
         </div>

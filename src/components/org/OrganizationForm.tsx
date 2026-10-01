@@ -48,16 +48,16 @@ export function DuplicatePanel({
       </div>
       <div className="grid sm:grid-cols-2 gap-3 text-sm">
         <div>
-          <div className="text-xs font-medium text-neutral-500 mb-1">Existing</div>
-          {duplicate.candidates.length === 0 && <div className="text-neutral-500 text-xs">Matches another record in the same file.</div>}
+          <div className="text-xs font-medium text-[var(--text-3)] mb-1">Existing</div>
+          {duplicate.candidates.length === 0 && <div className="text-[var(--text-3)] text-xs">Matches another record in the same file.</div>}
           <div className="space-y-2">
             {duplicate.candidates.map((c) => (
-              <label key={c.id} className="flex gap-2 rounded-md border border-neutral-200 dark:border-neutral-800 p-2 cursor-pointer">
+              <label key={c.id} className="flex gap-2 rounded-md border border-[var(--border)] p-2 cursor-pointer">
                 <input type="radio" name="dup-target" checked={target === c.id} onChange={() => setTarget(c.id)} className="mt-1" />
                 <div className="min-w-0">
                   <div className="font-medium">{c.name}</div>
-                  <div className="text-xs text-neutral-500">{c.address ?? "Address unknown"}</div>
-                  <div className="text-xs text-neutral-500">{[c.phone, c.website].filter(Boolean).join(" · ")}</div>
+                  <div className="text-xs text-[var(--text-3)]">{c.address ?? "Address unknown"}</div>
+                  <div className="text-xs text-[var(--text-3)]">{[c.phone, c.website].filter(Boolean).join(" · ")}</div>
                   <div className="flex flex-wrap gap-1 mt-1">
                     <Badge tone="amber">{Math.round(c.score * 100)}% match</Badge>
                     {c.reasons.map((r) => (
@@ -70,11 +70,11 @@ export function DuplicatePanel({
           </div>
         </div>
         <div>
-          <div className="text-xs font-medium text-neutral-500 mb-1">New</div>
-          <div className="rounded-md border border-neutral-200 dark:border-neutral-800 p-2">
+          <div className="text-xs font-medium text-[var(--text-3)] mb-1">New</div>
+          <div className="rounded-md border border-[var(--border)] p-2">
             <div className="font-medium">{incoming.name}</div>
-            <div className="text-xs text-neutral-500">{incoming.address ?? "Address unknown"}</div>
-            <div className="text-xs text-neutral-500">{[incoming.phone, incoming.email, incoming.website].filter(Boolean).join(" · ")}</div>
+            <div className="text-xs text-[var(--text-3)]">{incoming.address ?? "Address unknown"}</div>
+            <div className="text-xs text-[var(--text-3)]">{[incoming.phone, incoming.email, incoming.website].filter(Boolean).join(" · ")}</div>
           </div>
         </div>
       </div>
@@ -89,7 +89,7 @@ export function DuplicatePanel({
           Merge
         </Button>
       </div>
-      <p className="text-[11px] text-neutral-500">Merge fills in missing fields on the existing record and never overwrites existing values. Differences are noted in its timeline.</p>
+      <p className="text-[11px] text-[var(--text-3)]">Merge fills in missing fields on the existing record and never overwrites existing values. Differences are noted in its timeline.</p>
     </div>
   );
 }
