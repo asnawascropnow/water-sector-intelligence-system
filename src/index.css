@@ -108,3 +108,47 @@ html.text-xlarge {
 }
 
 
+
+:root {
+  --accent: #0052cc;
+}
+.dark {
+  --accent: #4f8cff;
+}
+html,
+body {
+  background-color: var(--bg-default);
+}
+.dark body {
+  background-color: #07090d;
+}
+
+/* Map markers & clusters */
+.bwi-marker {
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+.bwi-marker-crm {
+  outline: 2px solid #111;
+  outline-offset: 1px;
+}
+.bwi-cluster {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: rgba(0, 82, 204, 0.88);
+  color: #fff;
+  font: 600 12px/1 var(--font-sans);
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+.leaflet-container {
+  font-family: var(--font-sans);
+}
+.leaflet-popup-content {
+  margin: 12px 14px;
+}

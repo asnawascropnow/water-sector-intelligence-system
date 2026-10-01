@@ -1,6 +1,6 @@
 {
-  "name": "WIOS - Water Intelligence Operating System",
-  "description": "The command center for water security, rainwater harvesting, groundwater aquifer levels, and consultancy projects.",
+  "name": "Bengaluru Water Intelligence & CRM",
+  "description": "Bengaluru organization discovery map, water-opportunity intelligence, CRM pipeline and AI next-action recommendations.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
