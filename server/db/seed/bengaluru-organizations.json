@@ -1,0 +1,1307 @@
+[
+ {
+  "name": "Peenya Industrial Association Hub",
+  "org_type": "Manufacturing",
+  "address": "Plot 24, 4th Cross, Peenya Industrial Area, Phase I",
+  "pincode": "560058",
+  "lat": 13.0285,
+  "lng": 77.5192,
+  "website": "https://peenyaindustrial.org"
+ },
+ {
+  "name": "Indian Institute of Science (IISc)",
+  "org_type": "College / University",
+  "address": "CV Raman Road, Malleshwaram",
+  "pincode": "560012",
+  "lat": 13.0184,
+  "lng": 77.5673,
+  "website": "https://iisc.ac.in"
+ },
+ {
+  "name": "Prestige Shantiniketan Residential Complex",
+  "org_type": "Apartment",
+  "address": "Whitefield Main Road, Hoodi",
+  "pincode": "560048",
+  "lat": 12.9842,
+  "lng": 77.7289,
+  "website": "https://shantiniketanrwa.com"
+ },
+ {
+  "name": "NIMHANS Bangalore",
+  "org_type": "Hospital",
+  "address": "Hosur Road, Lakkasandra",
+  "pincode": "560029",
+  "lat": 12.9395,
+  "lng": 77.5958,
+  "website": "https://nimhans.ac.in"
+ },
+ {
+  "name": "Vidhana Soudha Bangalore",
+  "org_type": "Government",
+  "address": "Dr. Ambedkar Veedhi, Sampangi Rama Nagar",
+  "pincode": "560001",
+  "lat": 12.9793,
+  "lng": 77.5908,
+  "website": "https://karnataka.gov.in"
+ },
+ {
+  "name": "ITC Windsor Bengaluru",
+  "org_type": "Hotel",
+  "address": "Windsor Square, Golf Course Road",
+  "pincode": "560052",
+  "lat": 12.9588,
+  "lng": 77.6098,
+  "website": "https://itchotels.com"
+ },
+ {
+  "name": "Manyata Embassy Business Park",
+  "org_type": "IT / Technology",
+  "address": "Manyata Tech Park, Nagawara",
+  "pincode": "560045",
+  "lat": 13.0476,
+  "lng": 77.6163,
+  "website": "https://manyatapark.com"
+ },
+ {
+  "name": "Christ University Bangalore",
+  "org_type": "College / University",
+  "address": "Hosur Road, Bhavani Nagar",
+  "pincode": "560029",
+  "lat": 12.9357,
+  "lng": 77.6072,
+  "website": "https://christuniversity.in"
+ },
+ {
+  "name": "St. Joseph's Boys High School Bangalore",
+  "org_type": "School",
+  "address": "Museum Road, Shivajinagar",
+  "pincode": "560025",
+  "lat": 12.9721,
+  "lng": 77.6094,
+  "website": "https://stjosephsbhs.com"
+ },
+ {
+  "name": "National Public School Indiranagar",
+  "org_type": "School",
+  "address": "433, Main Rd, Bengaluru Zone",
+  "pincode": "560048",
+  "lat": 12.973840066694711,
+  "lng": 77.73939614064884,
+  "website": "https://nationalpublicschoolindiranagar.in"
+ },
+ {
+  "name": "Bishop Cotton Boys' School",
+  "org_type": "School",
+  "address": "359, Main Rd, Bengaluru Zone",
+  "pincode": "560078",
+  "lat": 12.91817640743792,
+  "lng": 77.60352481575725,
+  "website": "https://bishopcottonboysschool.in"
+ },
+ {
+  "name": "Bishop Cotton Girls' School",
+  "org_type": "School",
+  "address": "293, Main Rd, Bengaluru Zone",
+  "pincode": "560078",
+  "lat": 12.896274247167733,
+  "lng": 77.62889231047048,
+  "website": "https://bishopcottongirlsschool.in"
+ },
+ {
+  "name": "Baldwin Boys' High School",
+  "org_type": "School",
+  "address": "237, Main Rd, Bengaluru Zone",
+  "pincode": "560034",
+  "lat": 12.895676944422613,
+  "lng": 77.58090313780318,
+  "website": "https://baldwinboyshighschool.in"
+ },
+ {
+  "name": "St. Joseph's Boys' High School",
+  "org_type": "School",
+  "address": "301, Main Rd, Bengaluru Zone",
+  "pincode": "560034",
+  "lat": 12.87242052740297,
+  "lng": 77.56835128777375,
+  "website": "https://stjosephsboyshighschool.in"
+ },
+ {
+  "name": "National Public School Koramangala",
+  "org_type": "School",
+  "address": "378, Main Rd, Bengaluru Zone",
+  "pincode": "560095",
+  "lat": 12.933847654048328,
+  "lng": 77.57596740630318,
+  "website": "https://nationalpublicschoolkoramangala.in"
+ },
+ {
+  "name": "National Public School Rajajinagar",
+  "org_type": "School",
+  "address": "59, Main Rd, Bengaluru Zone",
+  "pincode": "560079",
+  "lat": 12.9352097399035,
+  "lng": 77.53737916092305,
+  "website": "https://nationalpublicschoolrajajinagar.in"
+ },
+ {
+  "name": "Delhi Public School Bengaluru South",
+  "org_type": "School",
+  "address": "87, Main Rd, Bengaluru Zone",
+  "pincode": "560100",
+  "lat": 12.86341259515347,
+  "lng": 77.625271661923,
+  "website": "https://delhipublicschoolbengalurusouth.in"
+ },
+ {
+  "name": "Delhi Public School Bengaluru East",
+  "org_type": "School",
+  "address": "333, Main Rd, Bengaluru Zone",
+  "pincode": "560066",
+  "lat": 12.99735970076218,
+  "lng": 77.69521403102918,
+  "website": "https://delhipublicschoolbengalurueast.in"
+ },
+ {
+  "name": "Delhi Public School Bengaluru North",
+  "org_type": "School",
+  "address": "404, Main Rd, Bengaluru Zone",
+  "pincode": "560064",
+  "lat": 13.082757362700356,
+  "lng": 77.60526488042156,
+  "website": "https://delhipublicschoolbengalurunorth.in"
+ },
+ {
+  "name": "Greenwood High International School",
+  "org_type": "School",
+  "address": "85, Main Rd, Bengaluru Zone",
+  "pincode": "560103",
+  "lat": 12.976126982730332,
+  "lng": 77.74075757944804,
+  "website": "https://greenwoodhighinternationalschool.in"
+ },
+ {
+  "name": "Sophia High School Palace Road",
+  "org_type": "School",
+  "address": "321, Main Rd, Bengaluru Zone",
+  "pincode": "560024",
+  "lat": 13.04461492268537,
+  "lng": 77.57495829558052,
+  "website": "https://sophiahighschoolpalaceroad.in"
+ },
+ {
+  "name": "Mallya Aditi International School",
+  "org_type": "School",
+  "address": "389, Main Rd, Bengaluru Zone",
+  "pincode": "560045",
+  "lat": 13.0812239976749,
+  "lng": 77.59951522312727,
+  "website": "https://mallyaaditiinternationalschool.in"
+ },
+ {
+  "name": "The Valley School KFI",
+  "org_type": "School",
+  "address": "415, Main Rd, Bengaluru Zone",
+  "pincode": "560034",
+  "lat": 12.849666359708658,
+  "lng": 77.63851640694051,
+  "website": "https://thevalleyschoolkfi.in"
+ },
+ {
+  "name": "Inventure Academy Sarjapur",
+  "org_type": "School",
+  "address": "60, Main Rd, Bengaluru Zone",
+  "pincode": "560066",
+  "lat": 12.993454865404633,
+  "lng": 77.69038070239141,
+  "website": "https://inventureacademysarjapur.in"
+ },
+ {
+  "name": "Indus International School Sarjapur",
+  "org_type": "School",
+  "address": "483, Main Rd, Bengaluru Zone",
+  "pincode": "560087",
+  "lat": 12.977244208881686,
+  "lng": 77.68565897825107,
+  "website": "https://indusinternationalschoolsarjapur.in"
+ },
+ {
+  "name": "Canadian International School Yelahanka",
+  "org_type": "School",
+  "address": "106, Main Rd, Bengaluru Zone",
+  "pincode": "560024",
+  "lat": 13.081020080986068,
+  "lng": 77.58048553401667,
+  "website": "https://canadianinternationalschoolyelahanka.in"
+ },
+ {
+  "name": "Chrysalis High Varthur",
+  "org_type": "School",
+  "address": "292, Main Rd, Bengaluru Zone",
+  "pincode": "560087",
+  "lat": 13.000943403012043,
+  "lng": 77.73999338621407,
+  "website": "https://chrysalishighvarthur.in"
+ },
+ {
+  "name": "The International School Bangalore (TISB)",
+  "org_type": "School",
+  "address": "499, Main Rd, Bengaluru Zone",
+  "pincode": "560066",
+  "lat": 12.995177106514106,
+  "lng": 77.68701534994494,
+  "website": "https://theinternationalschoolbangaloretisb.in"
+ },
+ {
+  "name": "Sherwood High School Bannerghatta",
+  "org_type": "School",
+  "address": "391, Main Rd, Bengaluru Zone",
+  "pincode": "560068",
+  "lat": 12.919999334578984,
+  "lng": 77.66262575422603,
+  "website": "https://sherwoodhighschoolbannerghatta.in"
+ },
+ {
+  "name": "Mount Carmel College Vasanth Nagar",
+  "org_type": "College / University",
+  "address": "51, Main Rd, Bengaluru Zone",
+  "pincode": "560064",
+  "lat": 13.111415518362545,
+  "lng": 77.61253088700718,
+  "website": "https://mountcarmelcollegevasanthnagar.in"
+ },
+ {
+  "name": "Jyoti Nivas College Koramangala",
+  "org_type": "College / University",
+  "address": "137, Main Rd, Bengaluru Zone",
+  "pincode": "560078",
+  "lat": 12.938037721386717,
+  "lng": 77.60636508428276,
+  "website": "https://jyotinivascollegekoramangala.in"
+ },
+ {
+  "name": "St. Joseph's College of Commerce",
+  "org_type": "College / University",
+  "address": "80, Main Rd, Bengaluru Zone",
+  "pincode": "560034",
+  "lat": 12.916201558591023,
+  "lng": 77.5640936540653,
+  "website": "https://stjosephscollegeofcommerce.in"
+ },
+ {
+  "name": "Christ Junior College Hosur Road",
+  "org_type": "College / University",
+  "address": "13, Main Rd, Bengaluru Zone",
+  "pincode": "560068",
+  "lat": 12.884672704259907,
+  "lng": 77.6064828499105,
+  "website": "https://christjuniorcollegehosurroad.in"
+ },
+ {
+  "name": "National College Jayanagar",
+  "org_type": "College / University",
+  "address": "172, Main Rd, Bengaluru Zone",
+  "pincode": "560078",
+  "lat": 12.908555181128552,
+  "lng": 77.63582835756199,
+  "website": "https://nationalcollegejayanagar.in"
+ },
+ {
+  "name": "National College Basavanagudi",
+  "org_type": "College / University",
+  "address": "404, Main Rd, Bengaluru Zone",
+  "pincode": "560034",
+  "lat": 12.864000514607346,
+  "lng": 77.55889493988659,
+  "website": "https://nationalcollegebasavanagudi.in"
+ },
+ {
+  "name": "MES College Malleshwaram",
+  "org_type": "College / University",
+  "address": "364, Main Rd, Bengaluru Zone",
+  "pincode": "560064",
+  "lat": 13.051078800226854,
+  "lng": 77.58888148283424,
+  "website": "https://mescollegemalleshwaram.in"
+ },
+ {
+  "name": "St. Claret College Jalahalli",
+  "org_type": "College / University",
+  "address": "435, Main Rd, Bengaluru Zone",
+  "pincode": "560058",
+  "lat": 13.026878071775025,
+  "lng": 77.62555352855121,
+  "website": "https://stclaretcollegejalahalli.in"
+ },
+ {
+  "name": "Vijaya College Jayanagar",
+  "org_type": "College / University",
+  "address": "159, Main Rd, Bengaluru Zone",
+  "pincode": "560100",
+  "lat": 12.870107998429672,
+  "lng": 77.63563659999457,
+  "website": "https://vijayacollegejayanagar.in"
+ },
+ {
+  "name": "SJR College of Science & Commerce",
+  "org_type": "College / University",
+  "address": "405, Main Rd, Bengaluru Zone",
+  "pincode": "560056",
+  "lat": 13.003928453825413,
+  "lng": 77.53483379151267,
+  "website": "https://sjrcollegeofsciencecommerce.in"
+ },
+ {
+  "name": "PES University Ring Road Campus",
+  "org_type": "College / University",
+  "address": "443, Main Rd, Bengaluru Zone",
+  "pincode": "560010",
+  "lat": 12.951125478485993,
+  "lng": 77.48013210183404,
+  "website": "https://pesuniversityringroadcampus.in"
+ },
+ {
+  "name": "PES University Electronic City Campus",
+  "org_type": "College / University",
+  "address": "367, Main Rd, Bengaluru Zone",
+  "pincode": "560100",
+  "lat": 12.888411313196775,
+  "lng": 77.55321750964715,
+  "website": "https://pesuniversityelectroniccitycampus.in"
+ },
+ {
+  "name": "RV College of Engineering (RVCE) Kengeri",
+  "org_type": "College / University",
+  "address": "463, Main Rd, Bengaluru Zone",
+  "pincode": "560040",
+  "lat": 13.001733256084568,
+  "lng": 77.50373991458187,
+  "website": "https://rvcollegeofengineeringrvcekengeri.in"
+ },
+ {
+  "name": "BMS College of Engineering (BMSCE) Basavanagudi",
+  "org_type": "College / University",
+  "address": "334, Main Rd, Bengaluru Zone",
+  "pincode": "560068",
+  "lat": 12.87375752462037,
+  "lng": 77.56940821447759,
+  "website": "https://bmscollegeofengineeringbmscebasavanagudi.in"
+ },
+ {
+  "name": "MS Ramaiah Institute of Technology (MSRIT)",
+  "org_type": "College / University",
+  "address": "223, Main Rd, Bengaluru Zone",
+  "pincode": "560024",
+  "lat": 13.09350055145469,
+  "lng": 77.56898725884365,
+  "website": "https://msramaiahinstituteoftechnologymsrit.in"
+ },
+ {
+  "name": "Bangalore University Jnana Bharathi Campus",
+  "org_type": "College / University",
+  "address": "382, Main Rd, Bengaluru Zone",
+  "pincode": "560040",
+  "lat": 12.994166641350287,
+  "lng": 77.51956260825996,
+  "website": "https://bangaloreuniversityjnanabharathicampus.in"
+ },
+ {
+  "name": "Christ University Kengeri Campus",
+  "org_type": "College / University",
+  "address": "172, Main Rd, Bengaluru Zone",
+  "pincode": "560098",
+  "lat": 12.967511539010525,
+  "lng": 77.48037122155213,
+  "website": "https://christuniversitykengericampus.in"
+ },
+ {
+  "name": "Christ University Bannerghatta Road Campus",
+  "org_type": "College / University",
+  "address": "169, Main Rd, Bengaluru Zone",
+  "pincode": "560095",
+  "lat": 12.852366190177909,
+  "lng": 77.63858330457425,
+  "website": "https://christuniversitybannerghattaroadcampus.in"
+ },
+ {
+  "name": "Christ University Yeshwanthpur Campus",
+  "org_type": "College / University",
+  "address": "163, Main Rd, Bengaluru Zone",
+  "pincode": "560024",
+  "lat": 13.10670494645974,
+  "lng": 77.58774102777527,
+  "website": "https://christuniversityyeshwanthpurcampus.in"
+ },
+ {
+  "name": "REVA University Yelahanka",
+  "org_type": "College / University",
+  "address": "224, Main Rd, Bengaluru Zone",
+  "pincode": "560024",
+  "lat": 13.067150977460397,
+  "lng": 77.58409719079073,
+  "website": "https://revauniversityyelahanka.in"
+ },
+ {
+  "name": "Alliance University Anekal Campus",
+  "org_type": "College / University",
+  "address": "15, Main Rd, Anekal Zone",
+  "pincode": "562125",
+  "lat": 12.814911352915527,
+  "lng": 77.6812132289859,
+  "website": "https://allianceuniversityanekalcampus.in"
+ },
+ {
+  "name": "Azim Premji University Sarjapur",
+  "org_type": "College / University",
+  "address": "187, Main Rd, Bengaluru Zone",
+  "pincode": "560087",
+  "lat": 12.973889314458166,
+  "lng": 77.68447929220181,
+  "website": "https://azimpremjiuniversitysarjapur.in"
+ },
+ {
+  "name": "Dayananda Sagar University Harohalli",
+  "org_type": "College / University",
+  "address": "164, Main Rd, Bengaluru Zone",
+  "pincode": "560078",
+  "lat": 12.938899813943827,
+  "lng": 77.62749050832942,
+  "website": "https://dayanandasagaruniversityharohalli.in"
+ },
+ {
+  "name": "IIIT Bangalore Electronic City",
+  "org_type": "College / University",
+  "address": "235, Main Rd, Bengaluru Zone",
+  "pincode": "560100",
+  "lat": 12.881183051534297,
+  "lng": 77.55947905565306,
+  "website": "https://iiitbangaloreelectroniccity.in"
+ },
+ {
+  "name": "Ramaiah University of Applied Sciences Peenya",
+  "org_type": "College / University",
+  "address": "237, Main Rd, Bengaluru Zone",
+  "pincode": "560064",
+  "lat": 13.020348235131017,
+  "lng": 77.59583830755136,
+  "website": "https://ramaiahuniversityofappliedsciencespeenya.in"
+ },
+ {
+  "name": "Manipal Hospital Old Airport Road",
+  "org_type": "Hospital",
+  "address": "414, Main Rd, Bengaluru Zone",
+  "pincode": "560037",
+  "lat": 12.986453163366889,
+  "lng": 77.69046342930977,
+  "website": "https://manipalhospitaloldairportroad.in"
+ },
+ {
+  "name": "Manipal Hospital Whitefield",
+  "org_type": "Hospital",
+  "address": "295, Main Rd, Bengaluru Zone",
+  "pincode": "560087",
+  "lat": 12.971158694007578,
+  "lng": 77.70806583362257,
+  "website": "https://manipalhospitalwhitefield.in"
+ },
+ {
+  "name": "Fortis Hospital Bannerghatta Road",
+  "org_type": "Hospital",
+  "address": "344, Main Rd, Bengaluru Zone",
+  "pincode": "560100",
+  "lat": 12.86030872858135,
+  "lng": 77.59238391909967,
+  "website": "https://fortishospitalbannerghattaroad.in"
+ },
+ {
+  "name": "Narayana Health City Bommasandra",
+  "org_type": "Hospital",
+  "address": "399, Main Rd, Anekal Zone",
+  "pincode": "560099",
+  "lat": 12.784601639798625,
+  "lng": 77.77900926287182,
+  "website": "https://narayanahealthcitybommasandra.in"
+ },
+ {
+  "name": "Fortis Hospital Cunningham Road",
+  "org_type": "Hospital",
+  "address": "136, Main Rd, Bengaluru Zone",
+  "pincode": "560100",
+  "lat": 12.927494373006999,
+  "lng": 77.65348839030138,
+  "website": "https://fortishospitalcunninghamroad.in"
+ },
+ {
+  "name": "Aster CMI Hospital Hebbal",
+  "org_type": "Hospital",
+  "address": "166, Main Rd, Bengaluru Zone",
+  "pincode": "560024",
+  "lat": 13.060776286542612,
+  "lng": 77.5526810791821,
+  "website": "https://astercmihospitalhebbal.in"
+ },
+ {
+  "name": "St. John's Medical College Hospital",
+  "org_type": "Hospital",
+  "address": "454, Main Rd, Bengaluru Zone",
+  "pincode": "560078",
+  "lat": 12.935068034752902,
+  "lng": 77.61475545870846,
+  "website": "https://stjohnsmedicalcollegehospital.in"
+ },
+ {
+  "name": "Victoria Hospital City Market",
+  "org_type": "Hospital",
+  "address": "197, Main Rd, Bengaluru Zone",
+  "pincode": "560078",
+  "lat": 12.854609748013024,
+  "lng": 77.59976038839484,
+  "website": "https://victoriahospitalcitymarket.in"
+ },
+ {
+  "name": "Bowring & Lady Curzon Hospital Shivajinagar",
+  "org_type": "Hospital",
+  "address": "111, Main Rd, Bengaluru Zone",
+  "pincode": "560058",
+  "lat": 13.072951851166016,
+  "lng": 77.58563288758171,
+  "website": "https://bowringladycurzonhospitalshivajinagar.in"
+ },
+ {
+  "name": "Apollo Hospitals Jayanagar",
+  "org_type": "Hospital",
+  "address": "491, Main Rd, Bengaluru Zone",
+  "pincode": "560078",
+  "lat": 12.869959782943642,
+  "lng": 77.57286631008587,
+  "website": "https://apollohospitalsjayanagar.in"
+ },
+ {
+  "name": "Apollo Hospitals Bannerghatta Road",
+  "org_type": "Hospital",
+  "address": "221, Main Rd, Bengaluru Zone",
+  "pincode": "560100",
+  "lat": 12.84493230525432,
+  "lng": 77.5726002085713,
+  "website": "https://apollohospitalsbannerghattaroad.in"
+ },
+ {
+  "name": "Sagar Hospitals Jayanagar",
+  "org_type": "Hospital",
+  "address": "485, Main Rd, Bengaluru Zone",
+  "pincode": "560068",
+  "lat": 12.875970912109198,
+  "lng": 77.55678408895471,
+  "website": "https://sagarhospitalsjayanagar.in"
+ },
+ {
+  "name": "Bangalore Baptist Hospital Hebbal",
+  "org_type": "Hospital",
+  "address": "306, Main Rd, Bengaluru Zone",
+  "pincode": "560045",
+  "lat": 13.068897067630756,
+  "lng": 77.63494275383093,
+  "website": "https://bangalorebaptisthospitalhebbal.in"
+ },
+ {
+  "name": "Kidwai Memorial Institute of Oncology",
+  "org_type": "Hospital",
+  "address": "37, Main Rd, Bengaluru Zone",
+  "pincode": "560078",
+  "lat": 12.85322882330129,
+  "lng": 77.62704327787434,
+  "website": "https://kidwaimemorialinstituteofoncology.in"
+ },
+ {
+  "name": "Sri Jayadeva Institute of Cardiovascular Sciences",
+  "org_type": "Hospital",
+  "address": "229, Main Rd, Bengaluru Zone",
+  "pincode": "560078",
+  "lat": 12.918186914744137,
+  "lng": 77.61096186944236,
+  "website": "https://srijayadevainstituteofcardiovascularsciences.in"
+ },
+ {
+  "name": "KC General Hospital Malleshwaram",
+  "org_type": "Hospital",
+  "address": "116, Main Rd, Bengaluru Zone",
+  "pincode": "560097",
+  "lat": 13.11705193598129,
+  "lng": 77.55623051720403,
+  "website": "https://kcgeneralhospitalmalleshwaram.in"
+ },
+ {
+  "name": "Sobha Dream Acres Balagere",
+  "org_type": "Apartment",
+  "address": "240, Main Rd, Bengaluru Zone",
+  "pincode": "560087",
+  "lat": 12.980867767479271,
+  "lng": 77.72493458577098,
+  "website": "https://sobhadreamacresbalagere.in"
+ },
+ {
+  "name": "Mantri Alpyne Uttarahalli",
+  "org_type": "Apartment",
+  "address": "119, Main Rd, Bengaluru Zone",
+  "pincode": "560100",
+  "lat": 12.893282149983257,
+  "lng": 77.60385864126076,
+  "website": "https://mantrialpyneuttarahalli.in"
+ },
+ {
+  "name": "Salarpuria Greenage Bommanahalli",
+  "org_type": "Apartment",
+  "address": "392, Main Rd, Bengaluru Zone",
+  "pincode": "560068",
+  "lat": 12.852932761233204,
+  "lng": 77.58882983519753,
+  "website": "https://salarpuriagreenagebommanahalli.in"
+ },
+ {
+  "name": "Prestige Lakeside Habitat Varthur",
+  "org_type": "Apartment",
+  "address": "279, Main Rd, Bengaluru Zone",
+  "pincode": "560037",
+  "lat": 12.978734495779547,
+  "lng": 77.74800763958983,
+  "website": "https://prestigelakesidehabitatvarthur.in"
+ },
+ {
+  "name": "Brigade Gateway Malleshwaram",
+  "org_type": "Apartment",
+  "address": "79, Main Rd, Bengaluru Zone",
+  "pincode": "560058",
+  "lat": 13.038615161501303,
+  "lng": 77.56976947643737,
+  "website": "https://brigadegatewaymalleshwaram.in"
+ },
+ {
+  "name": "Purva Riviera Marathahalli",
+  "org_type": "Apartment",
+  "address": "211, Main Rd, Bengaluru Zone",
+  "pincode": "560048",
+  "lat": 12.968594592273806,
+  "lng": 77.71184257032196,
+  "website": "https://purvarivieramarathahalli.in"
+ },
+ {
+  "name": "Mantri Elegance Bannerghatta",
+  "org_type": "Apartment",
+  "address": "447, Main Rd, Bengaluru Zone",
+  "pincode": "560095",
+  "lat": 12.93559532813832,
+  "lng": 77.64003511946306,
+  "website": "https://mantrielegancebannerghatta.in"
+ },
+ {
+  "name": "Salarpuria Magnificia Old Madras Road",
+  "org_type": "Apartment",
+  "address": "198, Main Rd, Bengaluru Zone",
+  "pincode": "560037",
+  "lat": 12.95523983199331,
+  "lng": 77.7326525959222,
+  "website": "https://salarpuriamagnificiaoldmadrasroad.in"
+ },
+ {
+  "name": "Prestige Shantiniketan Whitefield Campus",
+  "org_type": "Apartment",
+  "address": "96, Main Rd, Bengaluru Zone",
+  "pincode": "560037",
+  "lat": 12.965884392076296,
+  "lng": 77.70786262587346,
+  "website": "https://prestigeshantiniketanwhitefieldcampus.in"
+ },
+ {
+  "name": "Godrej Eternity Kanakapura Road",
+  "org_type": "Apartment",
+  "address": "497, Main Rd, Bengaluru Zone",
+  "pincode": "560100",
+  "lat": 12.913736257027276,
+  "lng": 77.64898435894067,
+  "website": "https://godrejeternitykanakapuraroad.in"
+ },
+ {
+  "name": "Sobha Forest View Kanakapura Road",
+  "org_type": "Apartment",
+  "address": "494, Main Rd, Bengaluru Zone",
+  "pincode": "560095",
+  "lat": 12.907504821535849,
+  "lng": 77.60584223538117,
+  "website": "https://sobhaforestviewkanakapuraroad.in"
+ },
+ {
+  "name": "Brigade Metropolis Whitefield",
+  "org_type": "Apartment",
+  "address": "313, Main Rd, Bengaluru Zone",
+  "pincode": "560087",
+  "lat": 12.961243564954616,
+  "lng": 77.6820187659314,
+  "website": "https://brigademetropoliswhitefield.in"
+ },
+ {
+  "name": "Phoenix One Bangalore West Rajajinagar",
+  "org_type": "Apartment",
+  "address": "389, Main Rd, Bengaluru Zone",
+  "pincode": "560079",
+  "lat": 12.965409453956916,
+  "lng": 77.52078220627162,
+  "website": "https://phoenixonebangalorewestrajajinagar.in"
+ },
+ {
+  "name": "Purva Sunflower Rajajinagar",
+  "org_type": "Apartment",
+  "address": "88, Main Rd, Bengaluru Zone",
+  "pincode": "560056",
+  "lat": 13.003957043046103,
+  "lng": 77.53630323256034,
+  "website": "https://purvasunflowerrajajinagar.in"
+ },
+ {
+  "name": "Prestige Kingfisher Towers Lavelle Road",
+  "org_type": "Apartment",
+  "address": "302, Main Rd, Bengaluru Zone",
+  "pincode": "560068",
+  "lat": 12.876926341285246,
+  "lng": 77.65833367802472,
+  "website": "https://prestigekingfishertowerslavelleroad.in"
+ },
+ {
+  "name": "The Leela Palace Bengaluru HAL Road",
+  "org_type": "Hotel",
+  "address": "242, Main Rd, Bengaluru Zone",
+  "pincode": "560037",
+  "lat": 12.973243718032318,
+  "lng": 77.7165007156094,
+  "website": "https://theleelapalacebengaluruhalroad.in"
+ },
+ {
+  "name": "ITC Gardenia Residency Road",
+  "org_type": "Hotel",
+  "address": "218, Main Rd, Bengaluru Zone",
+  "pincode": "560078",
+  "lat": 12.926163429142816,
+  "lng": 77.65004519435324,
+  "website": "https://itcgardeniaresidencyroad.in"
+ },
+ {
+  "name": "ITC Windsor Golf Course Road",
+  "org_type": "Hotel",
+  "address": "133, Main Rd, Bengaluru Zone",
+  "pincode": "560064",
+  "lat": 13.055857557600484,
+  "lng": 77.60305586936846,
+  "website": "https://itcwindsorgolfcourseroad.in"
+ },
+ {
+  "name": "Taj West End Race Course Road",
+  "org_type": "Hotel",
+  "address": "435, Main Rd, Bengaluru Zone",
+  "pincode": "560045",
+  "lat": 13.059991985390955,
+  "lng": 77.54494213449854,
+  "website": "https://tajwestendracecourseroad.in"
+ },
+ {
+  "name": "Conrad Bengaluru Ulsoor Lake",
+  "org_type": "Hotel",
+  "address": "421, Main Rd, Bengaluru Zone",
+  "pincode": "560048",
+  "lat": 12.992996498440467,
+  "lng": 77.71959937360981,
+  "website": "https://conradbengaluruulsoorlake.in"
+ },
+ {
+  "name": "Shangri-La Bengaluru Palace Road",
+  "org_type": "Hotel",
+  "address": "242, Main Rd, Bengaluru Zone",
+  "pincode": "560097",
+  "lat": 13.107021561501327,
+  "lng": 77.54666693456949,
+  "website": "https://shangrilabengalurupalaceroad.in"
+ },
+ {
+  "name": "JW Marriott Hotel Vittal Mallya Road",
+  "org_type": "Hotel",
+  "address": "132, Main Rd, Bengaluru Zone",
+  "pincode": "560034",
+  "lat": 12.922130338533249,
+  "lng": 77.58256087016046,
+  "website": "https://jwmarriotthotelvittalmallyaroad.in"
+ },
+ {
+  "name": "The Oberoi Bengaluru MG Road",
+  "org_type": "Hotel",
+  "address": "113, Main Rd, Bengaluru Zone",
+  "pincode": "560037",
+  "lat": 12.961118171583339,
+  "lng": 77.73113454116657,
+  "website": "https://theoberoibengalurumgroad.in"
+ },
+ {
+  "name": "Hyatt Centric MG Road Bengaluru",
+  "org_type": "Hotel",
+  "address": "214, Main Rd, Bengaluru Zone",
+  "pincode": "560087",
+  "lat": 12.968252777253705,
+  "lng": 77.72166907037439,
+  "website": "https://hyattcentricmgroadbengaluru.in"
+ },
+ {
+  "name": "Radisson Blu Atria Palace Road",
+  "org_type": "Hotel",
+  "address": "390, Main Rd, Bengaluru Zone",
+  "pincode": "560024",
+  "lat": 13.060795933853855,
+  "lng": 77.60966985324183,
+  "website": "https://radissonbluatriapalaceroad.in"
+ },
+ {
+  "name": "Sheraton Grand Bengaluru Whitefield",
+  "org_type": "Hotel",
+  "address": "262, Main Rd, Bengaluru Zone",
+  "pincode": "560037",
+  "lat": 12.952895776966454,
+  "lng": 77.7403734236011,
+  "website": "https://sheratongrandbengaluruwhitefield.in"
+ },
+ {
+  "name": "Hilton Bangalore Embassy Manyata Business Park",
+  "org_type": "Hotel",
+  "address": "391, Main Rd, Bengaluru Zone",
+  "pincode": "560024",
+  "lat": 13.045041720747886,
+  "lng": 77.62572008345836,
+  "website": "https://hiltonbangaloreembassymanyatabusinesspark.in"
+ },
+ {
+  "name": "Grand Mercure Bengaluru Koramangala",
+  "org_type": "Hotel",
+  "address": "456, Main Rd, Bengaluru Zone",
+  "pincode": "560034",
+  "lat": 12.908366609886455,
+  "lng": 77.667347573624,
+  "website": "https://grandmercurebengalurukoramangala.in"
+ },
+ {
+  "name": "Vikasa Soudha Ambedkar Veedhi",
+  "org_type": "Government",
+  "address": "129, Main Rd, Bengaluru Zone",
+  "pincode": "560024",
+  "lat": 13.055138305188883,
+  "lng": 77.55119702196811,
+  "website": "https://vikasasoudhaambedkarveedhi.in"
+ },
+ {
+  "name": "High Court of Karnataka Attara Kacheri",
+  "org_type": "Government",
+  "address": "102, Main Rd, Bengaluru Zone",
+  "pincode": "560045",
+  "lat": 13.070164977900216,
+  "lng": 77.5930440328587,
+  "website": "https://highcourtofkarnatakaattarakacheri.in"
+ },
+ {
+  "name": "Raj Bhavan Bengaluru Raj Bhavan Road",
+  "org_type": "Government",
+  "address": "492, Main Rd, Bengaluru Zone",
+  "pincode": "560097",
+  "lat": 13.092536895281013,
+  "lng": 77.6049746916865,
+  "website": "https://rajbhavanbengalururajbhavanroad.in"
+ },
+ {
+  "name": "BBMP Head Office Corporation Circle",
+  "org_type": "Government",
+  "address": "315, Main Rd, Bengaluru Zone",
+  "pincode": "560095",
+  "lat": 12.888666730322692,
+  "lng": 77.64914492799602,
+  "website": "https://bbmpheadofficecorporationcircle.in"
+ },
+ {
+  "name": "BDA Head Office Chowdaiah Road",
+  "org_type": "Government",
+  "address": "236, Main Rd, Bengaluru Zone",
+  "pincode": "560024",
+  "lat": 13.110491500196654,
+  "lng": 77.59071001339562,
+  "website": "https://bdaheadofficechowdaiahroad.in"
+ },
+ {
+  "name": "Visvesvaraya Tower Ambedkar Veedhi",
+  "org_type": "Government",
+  "address": "445, Main Rd, Bengaluru Zone",
+  "pincode": "560024",
+  "lat": 13.023251812402686,
+  "lng": 77.57881332719197,
+  "website": "https://visvesvarayatowerambedkarveedhi.in"
+ },
+ {
+  "name": "Vidhana Soudha Annex",
+  "org_type": "Government",
+  "address": "343, Main Rd, Bengaluru Zone",
+  "pincode": "560045",
+  "lat": 13.03673513223382,
+  "lng": 77.56675432203302,
+  "website": "https://vidhanasoudhaannex.in"
+ },
+ {
+  "name": "Kendriya Sadan Koramangala",
+  "org_type": "Government",
+  "address": "188, Main Rd, Bengaluru Zone",
+  "pincode": "560068",
+  "lat": 12.892708989295613,
+  "lng": 77.56723419390549,
+  "website": "https://kendriyasadankoramangala.in"
+ },
+ {
+  "name": "Karnataka Examination Authority Malleshwaram",
+  "org_type": "Government",
+  "address": "262, Main Rd, Bengaluru Zone",
+  "pincode": "560097",
+  "lat": 13.119196365233037,
+  "lng": 77.5790915314907,
+  "website": "https://karnatakaexaminationauthoritymalleshwaram.in"
+ },
+ {
+  "name": "MS Building Ambedkar Veedhi",
+  "org_type": "Government",
+  "address": "187, Main Rd, Bengaluru Zone",
+  "pincode": "560058",
+  "lat": 13.052153810047447,
+  "lng": 77.58419250257593,
+  "website": "https://msbuildingambedkarveedhi.in"
+ },
+ {
+  "name": "BBMP Mahadevapura Zonal Office",
+  "org_type": "Government",
+  "address": "150, Main Rd, Bengaluru Zone",
+  "pincode": "560103",
+  "lat": 12.993968534393412,
+  "lng": 77.72456500939815,
+  "website": "https://bbmpmahadevapurazonaloffice.in"
+ },
+ {
+  "name": "BBMP Bommanahalli Zonal Office",
+  "org_type": "Government",
+  "address": "242, Main Rd, Bengaluru Zone",
+  "pincode": "560068",
+  "lat": 12.846412209278594,
+  "lng": 77.65761260125063,
+  "website": "https://bbmpbommanahallizonaloffice.in"
+ },
+ {
+  "name": "BBMP Yelahanka Zonal Office",
+  "org_type": "Government",
+  "address": "282, Main Rd, Bengaluru Zone",
+  "pincode": "560097",
+  "lat": 13.044524983802994,
+  "lng": 77.60108563204304,
+  "website": "https://bbmpyelahankazonaloffice.in"
+ },
+ {
+  "name": "BBMP Rajarajeshwari Nagar Zonal Office",
+  "org_type": "Government",
+  "address": "135, Main Rd, Bengaluru Zone",
+  "pincode": "560056",
+  "lat": 12.930211765333013,
+  "lng": 77.54621474010058,
+  "website": "https://bbmprajarajeshwarinagarzonaloffice.in"
+ },
+ {
+  "name": "BBMP Dasarahalli Zonal Office",
+  "org_type": "Government",
+  "address": "72, Main Rd, Bengaluru Zone",
+  "pincode": "560024",
+  "lat": 13.023394098637167,
+  "lng": 77.57135306855177,
+  "website": "https://bbmpdasarahallizonaloffice.in"
+ },
+ {
+  "name": "NTT Data Center Whitefield",
+  "org_type": "IT / Technology",
+  "address": "132, Main Rd, Bengaluru Zone",
+  "pincode": "560103",
+  "lat": 12.987117885561489,
+  "lng": 77.71571549233623,
+  "website": "https://nttdatacenterwhitefield.in"
+ },
+ {
+  "name": "CtrlS Data Center Hebbal",
+  "org_type": "IT / Technology",
+  "address": "200, Main Rd, Bengaluru Zone",
+  "pincode": "560058",
+  "lat": 13.056456020305284,
+  "lng": 77.57466147627544,
+  "website": "https://ctrlsdatacenterhebbal.in"
+ },
+ {
+  "name": "STT GDC Bengaluru Mahadevapura",
+  "org_type": "IT / Technology",
+  "address": "161, Main Rd, Bengaluru Zone",
+  "pincode": "560087",
+  "lat": 12.990041797972673,
+  "lng": 77.71828984669058,
+  "website": "https://sttgdcbengalurumahadevapura.in"
+ },
+ {
+  "name": "Nxtra by Airtel Bidadi Data Center",
+  "org_type": "IT / Technology",
+  "address": "360, Main Rd, Nelamangala Zone",
+  "pincode": "562123",
+  "lat": 13.078126650398346,
+  "lng": 77.38765709799536,
+  "website": "https://nxtrabyairtelbidadidatacenter.in"
+ },
+ {
+  "name": "STT GDC Bengaluru Electronic City",
+  "org_type": "IT / Technology",
+  "address": "127, Main Rd, Bengaluru Zone",
+  "pincode": "560100",
+  "lat": 12.92591750992425,
+  "lng": 77.59558959565032,
+  "website": "https://sttgdcbengaluruelectroniccity.in"
+ },
+ {
+  "name": "Netmagic IT Park Electronic City",
+  "org_type": "IT / Technology",
+  "address": "382, Main Rd, Bengaluru Zone",
+  "pincode": "560078",
+  "lat": 12.9221135714391,
+  "lng": 77.6607295828517,
+  "website": "https://netmagicitparkelectroniccity.in"
+ },
+ {
+  "name": "Web Werks Data Center Whitefield",
+  "org_type": "IT / Technology",
+  "address": "467, Main Rd, Bengaluru Zone",
+  "pincode": "560103",
+  "lat": 12.950768141315418,
+  "lng": 77.68559604940101,
+  "website": "https://webwerksdatacenterwhitefield.in"
+ },
+ {
+  "name": "Sify Technologies Data Center Electronic City",
+  "org_type": "IT / Technology",
+  "address": "44, Main Rd, Bengaluru Zone",
+  "pincode": "560034",
+  "lat": 12.915201415226845,
+  "lng": 77.63830014637233,
+  "website": "https://sifytechnologiesdatacenterelectroniccity.in"
+ },
+ {
+  "name": "Bannerghatta Stone Quarrying Zone",
+  "org_type": "Industrial",
+  "address": "331, Main Rd, Bengaluru Zone",
+  "pincode": "560034",
+  "lat": 12.878567537391778,
+  "lng": 77.56916830566131,
+  "website": "https://bannerghattastonequarryingzone.in"
+ },
+ {
+  "name": "Nelamangala Granite Quarry Cluster",
+  "org_type": "Industrial",
+  "address": "180, Main Rd, Nelamangala Zone",
+  "pincode": "562123",
+  "lat": 13.080714970333903,
+  "lng": 77.40630220865296,
+  "website": "https://nelamangalagranitequarrycluster.in"
+ },
+ {
+  "name": "Devanahalli Stone Crusher Unit A",
+  "org_type": "Industrial",
+  "address": "86, Main Rd, Devanahalli Zone",
+  "pincode": "562110",
+  "lat": 13.167323154283366,
+  "lng": 77.73033112290649,
+  "website": "https://devanahallistonecrusherunita.in"
+ },
+ {
+  "name": "Devanahalli Stone Crusher Unit B",
+  "org_type": "Industrial",
+  "address": "129, Main Rd, Devanahalli Zone",
+  "pincode": "562300",
+  "lat": 13.202315832695248,
+  "lng": 77.68317521524897,
+  "website": "https://devanahallistonecrusherunitb.in"
+ },
+ {
+  "name": "Doddaballapur Quarry Cluster",
+  "org_type": "Industrial",
+  "address": "337, Main Rd, Devanahalli Zone",
+  "pincode": "562110",
+  "lat": 13.210720612027496,
+  "lng": 77.68960822101697,
+  "website": "https://doddaballapurquarrycluster.in"
+ },
+ {
+  "name": "Sarjapura Clay Mining Area",
+  "org_type": "Industrial",
+  "address": "435, Main Rd, Bengaluru Zone",
+  "pincode": "560066",
+  "lat": 12.973914968250723,
+  "lng": 77.75601748702027,
+  "website": "https://sarjapuraclayminingarea.in"
+ },
+ {
+  "name": "Kengeri Brick Kiln Mining Cluster",
+  "org_type": "Industrial",
+  "address": "165, Main Rd, Bengaluru Zone",
+  "pincode": "560056",
+  "lat": 12.979201091365622,
+  "lng": 77.49118765308098,
+  "website": "https://kengeribrickkilnminingcluster.in"
+ },
+ {
+  "name": "Jigani Stone Processing & Mining Hub",
+  "org_type": "Industrial",
+  "address": "333, Main Rd, Anekal Zone",
+  "pincode": "560099",
+  "lat": 12.750641033941,
+  "lng": 77.75453427792311,
+  "website": "https://jiganistoneprocessingmininghub.in"
+ },
+ {
+  "name": "Toyota Kirloskar Motor Bidadi Plant",
+  "org_type": "Manufacturing",
+  "address": "345, Main Rd, Nelamangala Zone",
+  "pincode": "562123",
+  "lat": 13.10695389080726,
+  "lng": 77.4470302602958,
+  "website": "https://toyotakirloskarmotorbidadiplant.in"
+ },
+ {
+  "name": "Bosch Bommasandra Manufacturing Facility",
+  "org_type": "Manufacturing",
+  "address": "79, Main Rd, Anekal Zone",
+  "pincode": "562125",
+  "lat": 12.757566343426092,
+  "lng": 77.6844410223105,
+  "website": "https://boschbommasandramanufacturingfacility.in"
+ },
+ {
+  "name": "TVS Motors Manufacturing Plant Attibele",
+  "org_type": "Manufacturing",
+  "address": "90, Main Rd, Anekal Zone",
+  "pincode": "562106",
+  "lat": 12.763717003640153,
+  "lng": 77.65713125442494,
+  "website": "https://tvsmotorsmanufacturingplantattibele.in"
+ },
+ {
+  "name": "Bharat Electronics Limited (BEL) Jalahalli",
+  "org_type": "Manufacturing",
+  "address": "265, Main Rd, Bengaluru Zone",
+  "pincode": "560024",
+  "lat": 13.040014630608232,
+  "lng": 77.57226739533652,
+  "website": "https://bharatelectronicslimitedbeljalahalli.in"
+ },
+ {
+  "name": "HAL Aircraft Engine Division",
+  "org_type": "Manufacturing",
+  "address": "242, Main Rd, Bengaluru Zone",
+  "pincode": "560103",
+  "lat": 12.970190312138596,
+  "lng": 77.75883776889697,
+  "website": "https://halaircraftenginedivision.in"
+ },
+ {
+  "name": "BEML Bengaluru Manufacturing Complex",
+  "org_type": "Manufacturing",
+  "address": "352, Main Rd, Bengaluru Zone",
+  "pincode": "560037",
+  "lat": 12.95311754761051,
+  "lng": 77.74277516585516,
+  "website": "https://bemlbengalurumanufacturingcomplex.in"
+ },
+ {
+  "name": "Wipro Bommasandra Hydraulics Division",
+  "org_type": "Manufacturing",
+  "address": "265, Main Rd, Anekal Zone",
+  "pincode": "560099",
+  "lat": 12.776373175222307,
+  "lng": 77.7782683566742,
+  "website": "https://wiprobommasandrahydraulicsdivision.in"
+ },
+ {
+  "name": "Biocon Park Bommasandra",
+  "org_type": "Manufacturing",
+  "address": "89, Main Rd, Anekal Zone",
+  "pincode": "560099",
+  "lat": 12.806279135884191,
+  "lng": 77.76431756767533,
+  "website": "https://bioconparkbommasandra.in"
+ },
+ {
+  "name": "Britannia Industries Manufacturing Facility",
+  "org_type": "Manufacturing",
+  "address": "126, Main Rd, Bengaluru Zone",
+  "pincode": "560037",
+  "lat": 12.995789985162883,
+  "lng": 77.71845807680506,
+  "website": "https://britanniaindustriesmanufacturingfacility.in"
+ },
+ {
+  "name": "Parle Products Nelamangala Plant",
+  "org_type": "Manufacturing",
+  "address": "264, Main Rd, Nelamangala Zone",
+  "pincode": "562162",
+  "lat": 13.106096354723125,
+  "lng": 77.44659840384824,
+  "website": "https://parleproductsnelamangalaplant.in"
+ },
+ {
+  "name": "Peenya Industrial Area Phase II Hub",
+  "org_type": "Industrial",
+  "address": "448, Main Rd, Bengaluru Zone",
+  "pincode": "560058",
+  "lat": 13.04370515705519,
+  "lng": 77.57536095055708,
+  "website": "https://peenyaindustrialareaphaseiihub.in"
+ },
+ {
+  "name": "Bommasandra Industrial Area Phase IV Cluster",
+  "org_type": "Industrial",
+  "address": "396, Main Rd, Anekal Zone",
+  "pincode": "562107",
+  "lat": 12.82226425735768,
+  "lng": 77.70761821471467,
+  "website": "https://bommasandraindustrialareaphaseivcluster.in"
+ },
+ {
+  "name": "Jigani Industrial Area Phase I Hub",
+  "org_type": "Industrial",
+  "address": "402, Main Rd, Anekal Zone",
+  "pincode": "560099",
+  "lat": 12.822882523555977,
+  "lng": 77.67876457320045,
+  "website": "https://jiganiindustrialareaphaseihub.in"
+ },
+ {
+  "name": "ITTPL Whitefield Tech Cluster",
+  "org_type": "Industrial",
+  "address": "446, Main Rd, Bengaluru Zone",
+  "pincode": "560066",
+  "lat": 12.995117822179724,
+  "lng": 77.74535092569245,
+  "website": "https://ittplwhitefieldtechcluster.in"
+ },
+ {
+  "name": "Doddaballapur Industrial Area Hub",
+  "org_type": "Industrial",
+  "address": "96, Main Rd, Devanahalli Zone",
+  "pincode": "562110",
+  "lat": 13.242527086950123,
+  "lng": 77.68927838349262,
+  "website": "https://doddaballapurindustrialareahub.in"
+ },
+ {
+  "name": "Bidadi Industrial Area Phase I",
+  "org_type": "Industrial",
+  "address": "317, Main Rd, Nelamangala Zone",
+  "pincode": "562123",
+  "lat": 13.07351403991123,
+  "lng": 77.43495193290443,
+  "website": "https://bidadiindustrialareaphasei.in"
+ }
+]
