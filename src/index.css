@@ -1,110 +1,97 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-
-  /* Design tokens - light mode */
-  --bg-default: #fafafa;
-  --bg-muted: #f4f6f8;
-  --surface: #ffffff;
-  --border: #e6e9ee;
-  --text-default: #0f1720;
-  --text-muted: #6b7280;
-  --accent: #0052CC;
-  --accent-2: #0065FF;
-  --success: #10b981;
-  --warning: #ff991f;
-  --danger: #de350b;
-
-  /* Dark theme tokens (will be applied when `.dark` class present on root) */
-  --dark-bg-default: #05060a;
-  --dark-bg-muted: #0b0f15;
-  --dark-surface: #0b1220;
-  --dark-border: #17202a;
-  --dark-text-default: #e6eef8;
-  --dark-text-muted: #9aa6b2;
-  --dark-accent: #4f8cff;
-  --dark-success: #12b981;
-  --dark-warning: #ffb86b;
-  --dark-danger: #ff6b6b;
 }
 
-/* Base resets & typography */
+/* Design tokens. Components use these through var(--…) so light/dark stay in sync. */
+:root {
+  --accent: #0b63ce;
+  --accent-hover: #0954b0;
+  --accent-soft: #eaf2fd;
+  --accent-text: #0b5cbf;
+  --page: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #f9fafb;
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+  --text: #111827;
+  --text-2: #4b5563;
+  --text-3: #6b7280;
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.04);
+}
+.dark {
+  --accent: #4d8ff0;
+  --accent-hover: #6aa2f4;
+  --accent-soft: rgba(77, 143, 240, 0.14);
+  --accent-text: #8ab6f7;
+  --page: #0a0c10;
+  --surface: #11141a;
+  --surface-2: #161a21;
+  --border: #232832;
+  --border-strong: #2f3642;
+  --text: #e8ebf0;
+  --text-2: #b4bcc8;
+  --text-3: #8b94a3;
+  --shadow-card: none;
+}
+
 html {
   font-size: 14px;
-  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
 body {
-  background-color: var(--bg-default);
-  color: var(--text-default);
+  background: var(--page);
+  color: var(--text);
   font-family: var(--font-sans);
 }
 
-/* Dark mode variables applied via .dark class on root */
-.dark body {
-  background-color: var(--dark-bg-default);
-  color: var(--dark-text-default);
-}
-
-/* Surface and borders */
-.card, .surface {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text-default);
-}
-.dark .card, .dark .surface {
-  background: var(--dark-surface);
-  border: 1px solid var(--dark-border);
-  color: var(--dark-text-default);
-}
-
-/* Utility helpers for text and muted text */
-.muted { color: var(--text-muted); }
-.dark .muted { color: var(--dark-text-muted); }
-
-/* Accent helpers */
-.accent { color: var(--accent); }
-.dark .accent { color: var(--dark-accent); }
-
-/* Custom Scrollbar styled for high-end enterprise dashboards */
+/* Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #eaeaea;
+  background: var(--border-strong);
   border-radius: 9999px;
-}
-.dark ::-webkit-scrollbar-thumb {
-  background: #222222;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #d4d4d4;
-}
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #333333;
+  border: 2px solid var(--page);
 }
 
-/* Global Font Scaling Configuration */
-html.text-normal {
-  font-size: 14px;
+/* Map markers & clusters */
+.bwi-marker {
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
-
-html.text-large {
-  font-size: 16px;
+.bwi-marker-crm {
+  outline: 2px solid #111;
+  outline-offset: 1px;
 }
-
-html.text-xlarge {
-  font-size: 18px;
+.bwi-cluster {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--accent) 90%, transparent);
+  color: #fff;
+  font: 600 12px/1 var(--font-sans);
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
-
-
+.leaflet-container {
+  font-family: var(--font-sans);
+}
+.leaflet-popup-content {
+  margin: 12px 14px;
+}
+.leaflet-popup-content-wrapper {
+  border-radius: 10px;
+}
