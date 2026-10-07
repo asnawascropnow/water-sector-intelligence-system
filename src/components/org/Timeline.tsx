@@ -13,6 +13,8 @@ const DOT: Record<string, string> = {
   connected: "bg-emerald-500",
   call_scheduled: "bg-sky-500",
   call_completed: "bg-emerald-600",
+  meeting_held: "bg-teal-500",
+  water_opportunity_converted: "bg-cyan-500",
   proposal_sent: "bg-indigo-500",
   follow_up_created: "bg-orange-500",
   follow_up_completed: "bg-emerald-500",

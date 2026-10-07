@@ -95,3 +95,10 @@ body {
 .leaflet-popup-content-wrapper {
   border-radius: 10px;
 }
+.bwi-marker-project {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: #0b63ce;
+  transform: rotate(45deg);
+}

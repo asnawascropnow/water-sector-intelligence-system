@@ -1,7 +1,9 @@
 import type { Queryable } from "../db";
 import type { DailyBrief, Recommendation } from "../../shared/types";
 import { todayIST } from "../lib/time";
-import { importReviewRecommendations, nextActionRecommendations, opportunityRecommendations, type RecommendationDraft } from "./nextAction";
+import { importReviewRecommendations, nextActionRecommendations, opportunityRecommendations, waterRecommendations, type RecommendationDraft } from "./nextAction";
+import { waterOpportunityCounts } from "../lib/waterOpportunities";
+import { crmPipelineCounts } from "../lib/crm";
 
 /**
  * Refresh stored recommendations: upsert current ones (keeping done/dismissed status), and close
@@ -12,6 +14,7 @@ export async function refreshRecommendations(q: Queryable): Promise<void> {
     ...(await nextActionRecommendations(q)),
     ...(await opportunityRecommendations(q)),
     ...(await importReviewRecommendations(q)),
+    ...(await waterRecommendations(q)),
   ];
   const keys = drafts.map((d) => d.dedupe_key);
   for (const d of drafts) {
@@ -58,20 +61,30 @@ export async function dailyBrief(q: Queryable, userId: number | null): Promise<D
   const today = todayIST();
   const mine = `($2::int IS NULL OR assigned_to = $2)`;
   const one = async (sql: string, params: unknown[]) => (await q.query<{ n: number }>(sql, params)).rows[0]?.n ?? 0;
+  const open = `EXISTS (SELECT 1 FROM pipeline_stages ps WHERE ps.pipeline = o.pipeline AND ps.name = o.status AND ps.kind = 'open')`;
   const counts = {
     followUpsDue: await one(`SELECT count(*)::int n FROM tasks WHERE status = 'Pending' AND task_type <> 'Call' AND due_date = $1 AND ${mine}`, [today, userId]),
     callsToday: await one(`SELECT count(*)::int n FROM tasks WHERE status = 'Pending' AND task_type = 'Call' AND due_date = $1 AND ${mine}`, [today, userId]),
     overdueFollowUps: await one(`SELECT count(*)::int n FROM tasks WHERE status = 'Pending' AND due_date < $1 AND ${mine}`, [today, userId]),
-    proposalsAwaitingResponse: await one(
-      `SELECT count(*)::int n FROM crm_opportunities WHERE proposal_status = 'Sent' AND status NOT IN ('Converted','Not Interested','Lost') AND ($1::int IS NULL OR owner_id = $1)`,
+    proposalsAwaitingResponse: await one(`SELECT count(*)::int n FROM crm_opportunities o WHERE o.proposal_status = 'Sent' AND ${open} AND ($1::int IS NULL OR o.owner_id = $1)`, [userId]),
+    // Opportunities still at the first stage of their pipeline (New / Identified).
+    newOpportunities: await one(
+      `SELECT count(*)::int n FROM crm_opportunities o
+        WHERE o.status = (SELECT f.name FROM pipeline_stages f WHERE f.pipeline = o.pipeline ORDER BY f.sort_order LIMIT 1)
+          AND ($1::int IS NULL OR o.owner_id = $1 OR o.owner_id IS NULL)`,
       [userId],
     ),
-    newOpportunities: await one(`SELECT count(*)::int n FROM crm_opportunities WHERE status = 'New' AND ($1::int IS NULL OR owner_id = $1 OR owner_id IS NULL)`, [userId]),
-    unassignedOpportunities: await one(`SELECT count(*)::int n FROM crm_opportunities WHERE owner_id IS NULL AND status NOT IN ('Converted','Not Interested','Lost')`, []),
+    unassignedOpportunities: await one(`SELECT count(*)::int n FROM crm_opportunities o WHERE o.owner_id IS NULL AND ${open}`, []),
     pendingImportRecords: await one(
       `SELECT count(*)::int n FROM imports i, jsonb_array_elements(i.records) r WHERE i.status = 'review' AND r->>'status' = 'pending'`,
       [],
     ),
   };
-  return { date: today, counts, recommendations: await listOpenRecommendations(q, { userId, limit: 50 }) };
+  return {
+    date: today,
+    counts,
+    recommendations: await listOpenRecommendations(q, { userId, limit: 50 }),
+    water: await waterOpportunityCounts(q, userId),
+    pipelines: await crmPipelineCounts(q, today, userId),
+  };
 }

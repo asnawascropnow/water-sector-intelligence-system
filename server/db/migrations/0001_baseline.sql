@@ -1,5 +1,10 @@
--- Bengaluru Water Intelligence & CRM — core schema (PostgreSQL + PostGIS)
--- Idempotent: safe to run on every start.
+-- Migration 0001 — baseline: the Bengaluru Water Intelligence & CRM MVP schema (PostgreSQL + PostGIS).
+--
+-- This is the schema that earlier versions created directly on every start. It stays fully
+-- idempotent (IF NOT EXISTS everywhere) so that databases created before the migration runner
+-- existed are adopted safely: running it there changes nothing and simply records version 0001.
+--
+-- Applied migrations are immutable. Never edit this file; add a new numbered migration instead.
 
 CREATE EXTENSION IF NOT EXISTS postgis;
 

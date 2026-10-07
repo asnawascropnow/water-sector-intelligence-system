@@ -19,13 +19,14 @@ Other scripts:
 
 | Command | What it does |
 | --- | --- |
-| `npm test` | Unit and integration tests (extraction, normalisation, duplicate detection, agents) |
+| `npm test` | Migration, API regression and unit tests (in-memory PGlite; set `TEST_DATABASE_URL` to also target real PostgreSQL) |
+| `npm run migrate` / `npm run migrate:status` | Apply or list database migrations (startup also applies them automatically) |
 | `npm run lint` | TypeScript type-check of client, server and shared code |
 | `npm run build && npm start` | Production build; the API serves the built client |
 
 ## Database
 
-PostgreSQL + PostGIS. Schema: `server/db/schema.sql`. It is applied idempotently on every start.
+PostgreSQL + PostGIS. The schema is defined by versioned migrations in `server/db/migrations/` (`0001_baseline.sql` is the MVP schema). Pending migrations are applied automatically on startup, and applied ones are checksum-protected. See `docs/architecture/wsis-expansion.md` for the migration rules and the WSIS expansion plan.
 
 - **Production:** set `DATABASE_URL` to a PostgreSQL server with the PostGIS extension available.
 - **Local default:** with no `DATABASE_URL`, the server uses PGlite (PostgreSQL compiled to WASM, with PostGIS) stored in `.data/pglite`. Delete that folder to reset.

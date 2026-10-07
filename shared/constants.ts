@@ -82,16 +82,50 @@ export type TaskStatus = (typeof TASK_STATUSES)[number];
 export const POTENTIAL_LEVELS = ["High", "Medium", "Low", "Unknown"] as const;
 export type Potential = (typeof POTENTIAL_LEVELS)[number];
 
-// Interaction types a user can log against a CRM opportunity. Each maps to a call status where relevant.
+// Interaction types a user can log against a CRM opportunity. Each maps to a call status where relevant, and
+// to a pipeline milestone (pipeline_stages.milestone) used for automatic forward stage movement in either pipeline.
 export const INTERACTION_TYPES = [
-  { type: "contact_attempted", label: "Contact attempted", callStatus: "Contact Attempted" },
-  { type: "connected", label: "Connected", callStatus: "Connected" },
-  { type: "no_response", label: "No response", callStatus: "No Response" },
-  { type: "call_scheduled", label: "Call scheduled", callStatus: "Call Scheduled" },
-  { type: "call_completed", label: "Call completed", callStatus: "Call Completed" },
-  { type: "proposal_sent", label: "Proposal sent", callStatus: null },
-  { type: "note", label: "Note", callStatus: null },
+  { type: "contact_attempted", label: "Contact attempted", callStatus: "Contact Attempted", milestone: "contacted" },
+  { type: "connected", label: "Connected", callStatus: "Connected", milestone: "contacted" },
+  { type: "no_response", label: "No response", callStatus: "No Response", milestone: "contacted" },
+  { type: "call_scheduled", label: "Call scheduled", callStatus: "Call Scheduled", milestone: "contacted" },
+  { type: "call_completed", label: "Call completed", callStatus: "Call Completed", milestone: "call" },
+  { type: "meeting_held", label: "Meeting held", callStatus: null, milestone: "meeting" },
+  { type: "proposal_sent", label: "Proposal sent", callStatus: null, milestone: "proposal" },
+  { type: "note", label: "Note", callStatus: null, milestone: null },
 ] as const;
 export type InteractionType = (typeof INTERACTION_TYPES)[number]["type"];
 
 export const IMPORT_FILE_TYPES = ["xlsx", "csv", "pdf", "docx"] as const;
+
+// ---------------------------------------------------------------------------------------------
+// WSIS expansion (migrations 0002–0005). The database catalogs (organization_types, project_types,
+// stakeholder_roles, water_intervention_types, opportunity_types, pipelines, fact_definitions) are the
+// source of truth for configurable lists and are served by GET /api/meta. The constants below are
+// fixed vocabularies enforced by CHECK constraints.
+// ORG_TYPES above remains the MVP's list for the current UI; the catalog is a superset of it.
+// ---------------------------------------------------------------------------------------------
+
+export const LIFECYCLE_STAGES = ["Concept", "Design", "Approval", "Tender", "Construction", "Commissioning", "Completed", "Operations", "Unknown"] as const;
+export type LifecycleStage = (typeof LIFECYCLE_STAGES)[number];
+
+export const PROJECT_SCALES = ["Small", "Medium", "Large", "Very large", "Unknown"] as const;
+export type ProjectScale = (typeof PROJECT_SCALES)[number];
+
+/** Provenance allowed on stored facts / links. "Unknown" is represented by the absence of a row. */
+export const FACT_PROVENANCE = ["Verified", "Unverified", "Estimated", "AI Inference"] as const;
+export type FactProvenance = (typeof FACT_PROVENANCE)[number];
+
+/**
+ * Water opportunity review model (migration 0009):
+ *   suggested → needs_review → approved | rejected;  approved → converted (linked to CRM) → closed.
+ * Only approved / converted opportunities are trusted. Rejected and closed ones are kept for audit.
+ */
+export const WATER_OPPORTUNITY_STATUSES = ["suggested", "needs_review", "approved", "rejected", "converted", "closed"] as const;
+export type WaterOpportunityStatus = (typeof WATER_OPPORTUNITY_STATUSES)[number];
+/** Statuses that are no longer live (excluded from counts and from the duplicate check). */
+export const WATER_OPPORTUNITY_CLOSED_STATUSES = ["rejected", "closed"] as const;
+export const WATER_OPPORTUNITY_OUTCOMES = ["won", "lost", "not_pursued", "superseded", "other"] as const;
+export type WaterOpportunityOutcome = (typeof WATER_OPPORTUNITY_OUTCOMES)[number];
+
+export const DEFAULT_PIPELINE = "relationship";

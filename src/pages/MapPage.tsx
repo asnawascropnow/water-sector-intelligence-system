@@ -91,7 +91,7 @@ export default function MapPage() {
                 className={cx("w-full text-left px-4 py-2 hover:bg-[var(--surface-2)]", o.lat != null ? "cursor-pointer" : "cursor-default")}
               >
                 <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full shrink-0" style={{ background: ORG_TYPE_COLORS[o.org_type] }} />
+                  <span className="h-2 w-2 rounded-full shrink-0" style={{ background: ORG_TYPE_COLORS[o.org_type] ?? ORG_TYPE_COLORS.Other }} />
                   <span className="text-sm truncate">{o.name}</span>
                 </div>
                 <div className="text-xs text-[var(--text-3)] ml-4 truncate">

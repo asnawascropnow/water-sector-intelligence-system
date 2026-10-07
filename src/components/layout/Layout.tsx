@@ -1,16 +1,20 @@
 import React, { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { Bot, Building2, Droplet, KanbanSquare, LayoutDashboard, ListChecks, Map, Menu, Moon, Settings, Sun, Upload, X } from "lucide-react";
+import { Bot, Building2, Droplet, Droplets, HardHat, KanbanSquare, Layers, LayoutDashboard, ListChecks, Map, Menu, Moon, PencilRuler, Settings, Sun, Upload, Warehouse, X, FolderKanban, type LucideIcon } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import { Avatar, cx } from "../ui";
+
+/** Icons for known saved views; any other view from the database gets a generic icon. */
+const VIEW_ICONS: Record<string, LucideIcon> = { architects: PencilRuler, developers: Warehouse, contractors: HardHat, water_ecosystem: Droplets };
 
 const NAV = [
   {
     group: "Discover",
     items: [
       { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-      { to: "/map", label: "Bengaluru Map", icon: Map },
       { to: "/organizations", label: "Organizations", icon: Building2 },
+      { to: "/projects", label: "Projects", icon: FolderKanban },
+      { to: "/map", label: "Bengaluru Map", icon: Map },
       { to: "/import", label: "Import Data", icon: Upload },
     ],
   },
@@ -26,7 +30,7 @@ const NAV = [
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const { activeUsers, currentUser, setCurrentUserId, theme, setTheme } = useApp();
+  const { activeUsers, currentUser, setCurrentUserId, theme, setTheme, taxonomy } = useApp();
   const [open, setOpen] = useState(false);
   const loc = useLocation();
   const fullBleed = loc.pathname === "/map";
@@ -60,23 +64,50 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div key={group}>
               <div className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--text-3)]">{group}</div>
               <div className="space-y-0.5">
-                {items.map(({ to, label, icon: Icon }) => (
-                  <NavLink
-                    key={to}
-                    to={to}
-                    onClick={() => setOpen(false)}
-                    className={({ isActive }) => {
-                      const active = isActive || (to === "/organizations" && loc.pathname.startsWith("/organizations/"));
-                      return cx(
-                        "group flex items-center gap-3 rounded-lg px-3 h-9 text-[13px] transition-colors",
-                        active ? "bg-[var(--accent-soft)] text-[var(--accent-text)] font-semibold" : "text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]",
-                      );
-                    }}
-                  >
-                    <Icon size={16} className="shrink-0" />
-                    {label}
-                  </NavLink>
-                ))}
+                {items.map(({ to, label, icon: Icon }) => {
+                  const viewKey = new URLSearchParams(loc.search).get("view");
+                  const onOrgs = loc.pathname === "/organizations";
+                  const active =
+                    to === "/organizations"
+                      ? (onOrgs && !viewKey) || loc.pathname.startsWith("/organizations/")
+                      : loc.pathname === to || (to === "/projects" && loc.pathname.startsWith("/projects/"));
+                  return (
+                    <React.Fragment key={to}>
+                      <NavLink
+                        to={to}
+                        onClick={() => setOpen(false)}
+                        className={cx(
+                          "group flex items-center gap-3 rounded-lg px-3 h-9 text-[13px] transition-colors",
+                          active ? "bg-[var(--accent-soft)] text-[var(--accent-text)] font-semibold" : "text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]",
+                        )}
+                      >
+                        <Icon size={16} className="shrink-0" />
+                        {label}
+                      </NavLink>
+                      {/* Saved Discover views from the database: the Organizations page with a type filter applied. */}
+                      {to === "/organizations" &&
+                        (taxonomy?.views ?? []).map((v) => {
+                          const VIcon = VIEW_ICONS[v.key] ?? Layers;
+                          const on = onOrgs && viewKey === v.key;
+                          return (
+                            <NavLink
+                              key={v.key}
+                              to={`/organizations?view=${encodeURIComponent(v.key)}`}
+                              onClick={() => setOpen(false)}
+                              title={v.types.join(", ")}
+                              className={cx(
+                                "flex items-center gap-3 rounded-lg pl-9 pr-3 h-8 text-[13px] transition-colors",
+                                on ? "bg-[var(--accent-soft)] text-[var(--accent-text)] font-semibold" : "text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]",
+                              )}
+                            >
+                              <VIcon size={14} className="shrink-0" />
+                              {v.label}
+                            </NavLink>
+                          );
+                        })}
+                    </React.Fragment>
+                  );
+                })}
               </div>
             </div>
           ))}

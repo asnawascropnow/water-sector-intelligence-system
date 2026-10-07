@@ -3,16 +3,25 @@ import type { FieldSource, Organization, OrganizationInput } from "../../shared/
 import { assessAndStore } from "../agents/opportunity";
 import { audit, logActivity } from "./log";
 import { gradeConfidence, normalizeName } from "./normalize";
+import { PRIMARY_OPPORTUNITY_ORDER } from "./crm";
 
 export const ORG_SELECT = `
   SELECT org.id, org.name, org.org_type, org.sector, org.address, org.area, org.city, org.pincode,
          ST_Y(org.geom::geometry) AS lat, ST_X(org.geom::geometry) AS lng,
          org.website, org.phone, org.email, org.source_id, s.label AS source_label, org.data_confidence,
          org.field_sources, org.intelligence, org.created_at, org.updated_at,
-         o.id AS opportunity_id, o.status AS crm_status, u.name AS owner_name
+         o.id AS opportunity_id, o.status AS crm_status, u.name AS owner_name,
+         (SELECT count(*)::int FROM crm_opportunities c WHERE c.organization_id = org.id) AS crm_opportunity_count,
+         (SELECT count(*)::int FROM crm_opportunities c WHERE c.organization_id = org.id AND c.pipeline = 'project') AS project_opportunity_count
     FROM organizations org
     LEFT JOIN sources s ON s.id = org.source_id
-    LEFT JOIN crm_opportunities o ON o.organization_id = org.id
+    -- The organization's own relationship (never a project opportunity): see PRIMARY_OPPORTUNITY_ORDER.
+    LEFT JOIN LATERAL (
+      SELECT o.id, o.status, o.owner_id FROM crm_opportunities o
+       WHERE o.organization_id = org.id AND o.pipeline = 'relationship'
+       ORDER BY ${PRIMARY_OPPORTUNITY_ORDER}
+       LIMIT 1
+    ) o ON TRUE
     LEFT JOIN users u ON u.id = o.owner_id`;
 
 export async function getOrganization(q: Queryable, id: number): Promise<Organization | null> {

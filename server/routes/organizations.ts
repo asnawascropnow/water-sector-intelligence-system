@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { db } from "../db";
-import { ORG_TYPES } from "../../shared/constants";
 import type { FieldSource, OrganizationInput } from "../../shared/types";
 import { actorId, ah, HttpError, intParam } from "../lib/http";
 import { audit, createSource, logActivity } from "../lib/log";
@@ -11,7 +10,11 @@ import { assessAndStore } from "../agents/opportunity";
 import { enrichOrganization } from "../agents/enrichment";
 import { RECOMMENDATION_SELECT } from "../agents/runner";
 import { todayIST } from "../lib/time";
-import { OPP_SELECT } from "../lib/crm";
+import { OPP_SELECT, PRIMARY_OPPORTUNITY_ORDER } from "../lib/crm";
+import { activeOrganizationTypes, viewTypes } from "../lib/catalog";
+import { organizationProjects } from "../lib/projects";
+import { addFact, changeFact, listFacts, retireFact } from "../lib/facts";
+import { listWaterOpportunities, organizationProjectWaterOpportunities } from "../lib/waterOpportunities";
 
 export const organizationsRouter = Router();
 
@@ -24,9 +27,16 @@ async function userName(id: number | null) {
 organizationsRouter.get(
   "/",
   ah(async (req, res) => {
-    const { q, type, area, crm, potential } = req.query as Record<string, string | undefined>;
+    const { q, type, area, crm, potential, view } = req.query as Record<string, string | undefined>;
     const params: unknown[] = [];
     const where = ["org.merged_into IS NULL"];
+    if (view) {
+      // Saved Discover view: restrict to its member types (combined with any other filter below).
+      const members = await viewTypes(db(), view);
+      if (!members) throw new HttpError(400, `Unknown view "${view}"`);
+      params.push(members);
+      where.push(`org.org_type = ANY($${params.length}::text[])`);
+    }
     if (q) {
       params.push(`%${q.toLowerCase()}%`);
       where.push(`(lower(org.name) LIKE $${params.length} OR lower(coalesce(org.area,'')) LIKE $${params.length} OR lower(coalesce(org.address,'')) LIKE $${params.length} OR lower(coalesce(org.sector,'')) LIKE $${params.length})`);
@@ -43,8 +53,10 @@ organizationsRouter.get(
       params.push(potential.split(","));
       where.push(`coalesce(org.intelligence->>'potential', 'Unknown') = ANY($${params.length}::text[])`);
     }
-    if (crm === "in") where.push(`o.id IS NOT NULL`);
-    if (crm === "out") where.push(`o.id IS NULL`);
+    // "In CRM" = any opportunity (relationship or project); "relationship" = has a relationship opportunity.
+    if (crm === "in") where.push(`EXISTS (SELECT 1 FROM crm_opportunities c WHERE c.organization_id = org.id)`);
+    if (crm === "out") where.push(`NOT EXISTS (SELECT 1 FROM crm_opportunities c WHERE c.organization_id = org.id)`);
+    if (crm === "relationship") where.push(`o.id IS NOT NULL`);
     const { rows } = await db().query(`${ORG_SELECT} WHERE ${where.join(" AND ")} ORDER BY org.name LIMIT 5000`, params);
     res.json(rows);
   }),
@@ -89,10 +101,32 @@ organizationsRouter.get(
         [id, todayIST()],
       )
     ).rows;
-    const opportunity = (await q.query(`${OPP_SELECT} WHERE o.organization_id = $1`, [id])).rows[0] ?? null;
+    // The MVP CRM panel manages the organization's relationship opportunity; project-pipeline opportunities
+    // are listed separately in `opportunities` (WSIS Phase 5).
+    const opportunity = (await q.query(`${OPP_SELECT} WHERE o.organization_id = $1 AND o.pipeline = 'relationship' ORDER BY ${PRIMARY_OPPORTUNITY_ORDER} LIMIT 1`, [id])).rows[0] ?? null;
     const suggestions = (await q.query(`${RECOMMENDATION_SELECT} WHERE r.organization_id = $1 AND r.agent = 'enrichment' AND r.status = 'open' ORDER BY r.id`, [id])).rows;
     const recommendations = (await q.query(`${RECOMMENDATION_SELECT} WHERE r.organization_id = $1 AND r.agent <> 'enrichment' AND r.status = 'open' ORDER BY r.id`, [id])).rows;
-    res.json({ organization, contacts, activities, tasks, opportunity, suggestions, recommendations });
+    // WSIS Phase 4 (additive): every CRM opportunity and the organization's project links.
+    const opportunities = (await q.query(`${OPP_SELECT} WHERE o.organization_id = $1 ORDER BY ${PRIMARY_OPPORTUNITY_ORDER}`, [id])).rows;
+    const projects = await organizationProjects(q, id);
+    const facts = await listFacts(q, "organization", id);
+    // WSIS Phase 6: organization-level water opportunities, and — separately — those on its projects.
+    const water_opportunities = {
+      organization: await listWaterOpportunities(q, { organizationId: id, organizationLevelOnly: true }),
+      projects: await organizationProjectWaterOpportunities(q, id),
+    };
+    res.json({ organization, contacts, activities, tasks, opportunity, opportunities, projects, facts, water_opportunities, suggestions, recommendations });
+  }),
+);
+
+/** Projects this organization is linked to, with its role on each. */
+organizationsRouter.get(
+  "/:id/projects",
+  ah(async (req, res) => {
+    const id = intParam(req.params.id);
+    const { rows } = await db().query<{ merged_into: number | null }>(`SELECT merged_into FROM organizations WHERE id = $1`, [id]);
+    if (!rows[0]) throw new HttpError(404, "Organization not found");
+    res.json(await organizationProjects(db(), id));
   }),
 );
 
@@ -112,7 +146,7 @@ organizationsRouter.post(
     const { data: raw, force, merge_into } = req.body as { data: OrganizationInput; force?: boolean; merge_into?: number };
     const who = await userName(actor);
     const label = `Manual entry by ${who}`;
-    const norm = normalizeRecord(raw, label);
+    const norm = normalizeRecord(raw, label, await activeOrganizationTypes(db()));
     if (!norm.data.name) throw new HttpError(400, "Organization name is required");
     const result = await db().tx(async (q) => {
       if (!force && !merge_into) {
@@ -143,7 +177,14 @@ organizationsRouter.patch(
     const out = await db().tx(async (q) => {
       const current = await getOrganization(q, id);
       if (!current) throw new HttpError(404, "Organization not found");
-      if (body.org_type && !ORG_TYPES.includes(body.org_type)) throw new HttpError(400, "Unknown organization type");
+      // An empty type means "not known": store the catalog's "Other" and label it Unknown below.
+      const typeCleared = "org_type" in body && !String(body.org_type ?? "").trim();
+      if (typeCleared) body.org_type = "Other";
+      if (body.org_type) {
+        const canonical = (await activeOrganizationTypes(q)).get(String(body.org_type).toLowerCase());
+        if (!canonical) throw new HttpError(400, "Unknown organization type");
+        body.org_type = canonical as typeof body.org_type;
+      }
       const fs: Record<string, FieldSource> = { ...current.field_sources };
       const sets: string[] = [];
       const params: unknown[] = [id];
@@ -160,7 +201,7 @@ organizationsRouter.patch(
           sets.push(`normalized_name = $${params.length}`);
         }
         changed[f] = [current[f], v];
-        fs[f] = v == null ? { provenance: "Unknown", source: null } : { provenance: "Verified", source: `Edited by ${who}` };
+        fs[f] = v == null || (f === "org_type" && typeCleared) ? { provenance: "Unknown", source: null } : { provenance: "Verified", source: `Edited by ${who}` };
       }
       if ("lat" in body || "lng" in body) {
         const lat = body.lat ?? null;
@@ -323,9 +364,77 @@ organizationsRouter.post(
       for (const t of ["contacts", "activities", "tasks", "crm_opportunities", "agent_recommendations"]) {
         await q.query(`UPDATE ${t} SET organization_id = $2 WHERE organization_id = $1`, [id, targetId]);
       }
+      // WSIS tables: move rows unless the surviving record already has the same fact / role / live
+      // opportunity. Rows that would collide stay on the merged record (still reachable through
+      // merged_into) — nothing is deleted.
+      await q.query(
+        `UPDATE organization_facts f SET organization_id = $2 WHERE f.organization_id = $1 AND (f.retired_at IS NOT NULL OR NOT EXISTS (
+           SELECT 1 FROM organization_facts t WHERE t.organization_id = $2 AND t.fact_key = f.fact_key AND lower(t.value) = lower(f.value) AND t.retired_at IS NULL))`,
+        [id, targetId],
+      );
+      await q.query(
+        `UPDATE project_organizations p SET organization_id = $2, updated_at = now() WHERE p.organization_id = $1 AND NOT EXISTS (
+           SELECT 1 FROM project_organizations t WHERE t.organization_id = $2 AND t.project_id = p.project_id AND t.role = p.role)`,
+        [id, targetId],
+      );
+      await q.query(
+        `UPDATE water_opportunities w SET organization_id = $2, updated_at = now() WHERE w.organization_id = $1 AND (w.status IN ('rejected','closed') OR NOT EXISTS (
+           SELECT 1 FROM water_opportunities t WHERE t.organization_id = $2 AND coalesce(t.project_id, 0) = coalesce(w.project_id, 0)
+              AND t.intervention_type = w.intervention_type AND t.context_key = w.context_key AND t.status NOT IN ('rejected','closed')))`,
+        [id, targetId],
+      );
       await q.query(`UPDATE organizations SET merged_into = $2, updated_at = now() WHERE id = $1`, [id, targetId]);
       await audit(q, actor, "organization", id, "merged_into", { target: targetId });
     });
     res.json({ id: targetId });
+  }),
+);
+
+/* ---------------- Organization facts (Built Environment Intelligence) ---------------- */
+
+organizationsRouter.get(
+  "/:id/facts",
+  ah(async (req, res) => {
+    const id = intParam(req.params.id);
+    if (!(await db().query(`SELECT 1 FROM organizations WHERE id = $1`, [id])).rows.length) throw new HttpError(404, "Organization not found");
+    res.json(await listFacts(db(), "organization", id, { includeRetired: req.query.include_retired === "1" || req.query.include_retired === "true" }));
+  }),
+);
+
+organizationsRouter.post(
+  "/:id/facts",
+  ah(async (req, res) => {
+    const id = intParam(req.params.id);
+    const b = req.body ?? {};
+    if (!b.key) throw new HttpError(400, "key is required");
+    const r = await db().tx((q) =>
+      addFact(q, "organization", id, { key: String(b.key), value: b.value, provenance: b.provenance, confidence: b.confidence, source: b.source, note: b.note }, actorId(req)),
+    );
+    res.status(201).json(r);
+  }),
+);
+
+/** Change a fact: the current version is retired and a new version is recorded (history kept). */
+organizationsRouter.patch(
+  "/:id/facts/:factId",
+  ah(async (req, res) => {
+    const b = req.body ?? {};
+    const r = await db().tx((q) =>
+      changeFact(q, "organization", intParam(req.params.id), intParam(req.params.factId, "fact id"), { value: b.value, provenance: b.provenance, confidence: b.confidence, source: b.source, note: b.note }, actorId(req)),
+    );
+    res.json(r);
+  }),
+);
+
+organizationsRouter.delete(
+  "/:id/facts/:factId",
+  ah(async (req, res) => {
+    const orgId = intParam(req.params.id);
+    const factId = intParam(req.params.factId, "fact id");
+    await db().tx(async (q) => {
+      if (!(await q.query(`SELECT 1 FROM organization_facts WHERE id = $1 AND organization_id = $2`, [factId, orgId])).rows.length) throw new HttpError(404, "Fact not found");
+      await retireFact(q, "organization", factId, actorId(req));
+    });
+    res.status(204).end();
   }),
 );

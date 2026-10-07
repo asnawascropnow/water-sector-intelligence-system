@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import type { SystemInfo, User } from "../../shared/types";
+import type { Catalog, OrganizationTaxonomy, SystemInfo, User } from "../../shared/types";
 import { api, setApiUser } from "../lib/api";
 
 interface AppState {
@@ -14,6 +14,10 @@ interface AppState {
   invalidate: () => void;
   reloadUsers: () => Promise<void>;
   system: SystemInfo | null;
+  /** Database-backed organization types, groups and saved Discover views (null until loaded). */
+  taxonomy: OrganizationTaxonomy | null;
+  /** All catalogs from GET /api/meta (project types, stages, roles, fact definitions, pipelines…). */
+  catalog: Catalog | null;
   toast: (message: string, kind?: "info" | "error") => void;
 }
 
@@ -40,6 +44,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<"light" | "dark">(() => (read("bwi-theme") === "dark" ? "dark" : "light"));
   const [dataVersion, setDataVersion] = useState(0);
   const [system, setSystem] = useState<SystemInfo | null>(null);
+  const [taxonomy, setTaxonomy] = useState<OrganizationTaxonomy | null>(null);
+  const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [toasts, setToasts] = useState<{ id: number; message: string; kind: "info" | "error" }[]>([]);
 
   const reloadUsers = useCallback(async () => {
@@ -49,6 +55,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     reloadUsers().catch(() => undefined);
     api.get<SystemInfo>("/system").then(setSystem).catch(() => undefined);
+    api.get<OrganizationTaxonomy>("/meta/organization-types").then(setTaxonomy).catch(() => undefined);
+    api.get<Catalog>("/meta").then(setCatalog).catch(() => undefined);
   }, [reloadUsers]);
 
   const activeUsers = useMemo(() => users.filter((u) => u.active), [users]);
@@ -80,6 +88,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     invalidate: useCallback(() => setDataVersion((v) => v + 1), []),
     reloadUsers,
     system,
+    taxonomy,
+    catalog,
     toast,
   };
 

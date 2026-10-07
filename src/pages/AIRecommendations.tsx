@@ -32,6 +32,7 @@ export default function AIRecommendations() {
     ["Data Extraction Agent", "Turns uploaded Excel, CSV, PDF and Word files into organization records, normalises them and checks for duplicates before human review."],
     ["Organization Enrichment Agent", "Looks up public information (organization website, OpenStreetMap geocoder, and AI web research when configured). Every suggestion keeps its source and waits for approval."],
     ["Opportunity Agent", "Rates each organization's potential for water / Net Zero solutions from its type, sector, water information and location, with reasons. Labelled AI Inference; missing data is never filled in."],
+    ["Water opportunity rules", "On request, read a project's or organization's sourced facts and suggest specific water interventions (STP, reuse, rainwater harvesting…), quoting the evidence. Suggestions need a person's approval; only approved ones can go to the CRM."],
     ["Next Action Agent", "Reviews every open CRM opportunity and recommends one next step: assign, contact, follow up on proposals, schedule calls, check pilots."],
     ["Daily Reminder Agent", "Summarises today's follow-ups, calls, proposals awaiting response, new and unassigned opportunities."],
   ];

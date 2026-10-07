@@ -7,9 +7,29 @@ import { useApi } from "../../lib/useApi";
 import { useApp } from "../../context/AppContext";
 import { Button, ErrorNote, Field, Input, Modal, Select } from "../ui";
 
-export default function TaskDialog({ open, onClose, organizationId }: { open: boolean; onClose: () => void; organizationId?: number }) {
+/**
+ * New follow-up. Context, most specific first: an opportunity (organization and project come from it), a
+ * project, or an organization (attached to its relationship opportunity, as before).
+ */
+export default function TaskDialog({
+  open,
+  onClose,
+  organizationId,
+  opportunityId,
+  projectId,
+  contextLabel,
+}: {
+  open: boolean;
+  onClose: () => void;
+  organizationId?: number;
+  opportunityId?: number;
+  projectId?: number;
+  /** Shown instead of the organization picker when the context is fixed, e.g. "Project opportunity: STP — Lakeside". */
+  contextLabel?: string;
+}) {
   const { activeUsers, currentUser, invalidate, toast } = useApp();
-  const { data: crmOrgs } = useApi<Organization[]>(open && !organizationId ? "/organizations?crm=in" : null);
+  const fixedContext = Boolean(organizationId || opportunityId || projectId);
+  const { data: crmOrgs } = useApi<Organization[]>(open && !fixedContext ? "/organizations?crm=in" : null);
   const [f, setF] = useState({ title: "", organization_id: "", due_date: todayLocal(1), task_type: "Follow-up", priority: "Medium", assigned_to: "" });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +45,13 @@ export default function TaskDialog({ open, onClose, organizationId }: { open: bo
     if (!f.title.trim()) return setError("Describe the task");
     setBusy(true);
     try {
-      await api.post("/tasks", { ...f, organization_id: f.organization_id ? Number(f.organization_id) : null, assigned_to: f.assigned_to ? Number(f.assigned_to) : null });
+      await api.post("/tasks", {
+        ...f,
+        organization_id: opportunityId ? null : f.organization_id ? Number(f.organization_id) : null,
+        opportunity_id: opportunityId ?? null,
+        project_id: opportunityId ? null : projectId ?? null,
+        assigned_to: f.assigned_to ? Number(f.assigned_to) : null,
+      });
       toast("Follow-up created");
       invalidate();
       onClose();
@@ -56,7 +82,8 @@ export default function TaskDialog({ open, onClose, organizationId }: { open: bo
         <Field label="Task *" className="col-span-2">
           <Input value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} placeholder="e.g. Call Operations Manager" autoFocus />
         </Field>
-        {!organizationId && (
+        {contextLabel && <p className="col-span-2 text-xs text-[var(--text-2)] rounded-md bg-[var(--surface-2)] border border-[var(--border)] px-3 py-2">{contextLabel}</p>}
+        {!fixedContext && (
           <Field label="Organization (CRM)" className="col-span-2">
             <Select value={f.organization_id} onChange={(e) => setF({ ...f, organization_id: e.target.value })} options={(crmOrgs ?? []).map((o) => ({ value: o.id, label: o.name }))} placeholder="None" />
           </Field>

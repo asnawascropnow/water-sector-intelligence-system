@@ -90,7 +90,7 @@ export function OrgPopupCard({ org, onAddToCrm }: { org: Organization; onAddToCr
           "Unknown"
         )}
       </Row>
-      <Row label="Status">{org.crm_status ?? "Not Contacted"}</Row>
+      <Row label="Status">{org.crm_status ?? (org.project_opportunity_count ? "Project opportunities only" : "Not Contacted")}</Row>
       <Row label="Opportunity">
         {org.intelligence?.potential ?? "Unknown"}
         {org.intelligence?.potential && org.intelligence.potential !== "Unknown" && <span className="text-[var(--text-3)]"> (AI Inference)</span>}
@@ -99,8 +99,8 @@ export function OrgPopupCard({ org, onAddToCrm }: { org: Organization; onAddToCr
         <Link to={`/organizations/${org.id}`} className="flex-1 text-center text-[12px] font-medium rounded border border-neutral-300 px-2 py-1.5 !text-neutral-800 hover:bg-neutral-50">
           View Details
         </Link>
-        {org.opportunity_id ? (
-          <Link to="/crm" className="flex-1 text-center text-[12px] font-medium rounded px-2 py-1.5 bg-neutral-100 !text-neutral-700">
+        {org.crm_opportunity_count > 0 ? (
+          <Link to={`/organizations/${org.id}`} className="flex-1 text-center text-[12px] font-medium rounded px-2 py-1.5 bg-neutral-100 !text-neutral-700">
             In CRM
           </Link>
         ) : (
@@ -158,7 +158,7 @@ export default function BengaluruMap({ organizations, focusId = null, onAddToCrm
           <Marker
             key={o.id}
             position={[o.lat!, o.lng!]}
-            icon={iconFor(o.org_type, Boolean(o.opportunity_id))}
+            icon={iconFor(o.org_type, o.crm_opportunity_count > 0)}
             title={o.name}
             ref={(m) => {
               if (m) markers.current.set(o.id, m);

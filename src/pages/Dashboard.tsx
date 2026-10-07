@@ -9,6 +9,9 @@ import {
   ChevronRight,
   FileText,
   FlaskConical,
+  Droplets,
+  FolderKanban,
+  Trophy,
   KanbanSquare,
   Map as MapIcon,
   PhoneCall,
@@ -18,7 +21,7 @@ import {
   UserX,
   type LucideIcon,
 } from "lucide-react";
-import { OUTCOME_STAGES, PIPELINE_STAGES } from "../../shared/constants";
+import { boardColumns, DEFAULT_PIPELINE_KEY, findPipeline } from "../lib/crmUtils";
 import type { DailyBrief, DashboardSummary, Organization } from "../../shared/types";
 import { useApi } from "../lib/useApi";
 import { formatDate, todayLocal } from "../lib/format";
@@ -37,7 +40,10 @@ export function TodaysActions({ brief }: { brief: DailyBrief }) {
     { n: c.overdueFollowUps, one: "Overdue follow-up", many: "Overdue follow-ups", to: "/tasks?scope=overdue", icon: AlarmClock, urgent: true },
     { n: c.followUpsDue, one: "Follow-up due today", many: "Follow-ups due today", to: "/tasks?scope=today", icon: CalendarCheck },
     { n: c.callsToday, one: "Call today", many: "Calls today", to: "/tasks?scope=today", icon: PhoneCall },
+    { n: brief.pipelines?.project.followUpsDue ?? 0, one: "Project opportunity follow-up due", many: "Project opportunity follow-ups due", to: "/crm?pipeline=project", icon: FolderKanban },
     { n: c.proposalsAwaitingResponse, one: "Proposal awaiting response", many: "Proposals awaiting response", to: "/crm", icon: FileText },
+    { n: (brief.pipelines?.relationship.pilots ?? 0) + (brief.pipelines?.project.pilots ?? 0), one: "Pilot in progress", many: "Pilots in progress", to: "/crm", icon: FlaskConical },
+    { n: brief.water?.approvedNotConverted ?? 0, one: "Approved water opportunity not yet in CRM", many: "Approved water opportunities not yet in CRM", to: "/ai", icon: Droplets },
     { n: c.newOpportunities, one: "New opportunity", many: "New opportunities", to: "/crm", icon: Sparkles },
     { n: c.unassignedOpportunities, one: "Unassigned opportunity", many: "Unassigned opportunities", to: "/crm", icon: UserX },
     { n: c.pendingImportRecords, one: "Imported record to review", many: "Imported records to review", to: "/import", icon: Upload },
@@ -71,16 +77,38 @@ export function TodaysActions({ brief }: { brief: DailyBrief }) {
   );
 }
 
+/** Stage counts per pipeline; stages come from the database catalog. */
 function Pipeline({ summary }: { summary: DashboardSummary }) {
-  const count = (st: string) => summary.pipeline.find((p) => p.status === st)?.count ?? 0;
-  const max = Math.max(1, ...PIPELINE_STAGES.map(count));
-  const total = summary.crmOpportunities;
+  const { catalog } = useApp();
+  const [key, setKey] = useState(DEFAULT_PIPELINE_KEY);
+  const pipeline = findPipeline(catalog?.pipelines, key);
+  const { main, outcomes } = boardColumns(pipeline);
+  const count = (st: string) => summary.pipeline.find((p) => p.pipeline === pipeline?.key && p.status === st)?.count ?? 0;
+  const max = Math.max(1, ...main.map((s) => count(s.name)));
+  const totals = summary.pipelines?.[(pipeline?.key ?? "relationship") as "relationship" | "project"];
+  const to = pipeline?.is_default ? "/crm" : `/crm?pipeline=${pipeline?.key}`;
   return (
     <div>
+      <div className="flex gap-1 mb-3" role="tablist" aria-label="Pipeline">
+        {(catalog?.pipelines ?? []).map((p) => (
+          <button
+            key={p.key}
+            role="tab"
+            aria-selected={p.key === pipeline?.key}
+            onClick={() => setKey(p.key)}
+            className={cx(
+              "rounded-md px-2 h-7 text-xs font-medium cursor-pointer",
+              p.key === pipeline?.key ? "bg-[var(--accent-soft)] text-[var(--accent-text)]" : "text-[var(--text-3)] hover:bg-[var(--surface-2)]",
+            )}
+          >
+            {p.key === "project" ? "Projects" : "Relationships"}
+          </button>
+        ))}
+      </div>
       <div className="space-y-2.5">
-        {PIPELINE_STAGES.map((st) => (
-          <Link key={st} to="/crm" className="flex items-center gap-3 text-[13px] group">
-            <span className="w-28 shrink-0 whitespace-nowrap text-[var(--text-2)] group-hover:text-[var(--text)]">{st}</span>
+        {main.map(({ name: st }) => (
+          <Link key={st} to={to} className="flex items-center gap-3 text-[13px] group">
+            <span className="w-32 shrink-0 whitespace-nowrap truncate text-[var(--text-2)] group-hover:text-[var(--text)]">{st}</span>
             <span className="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-white/5 overflow-hidden">
               <span className="block h-full rounded-full bg-[var(--accent)] transition-all" style={{ width: `${(count(st) / max) * 100}%` }} />
             </span>
@@ -89,13 +117,18 @@ function Pipeline({ summary }: { summary: DashboardSummary }) {
         ))}
       </div>
       <div className="mt-4 pt-3 border-t border-[var(--border)] flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--text-3)]">
-        {OUTCOME_STAGES.map((st) => (
+        {outcomes.map(({ name: st }) => (
           <span key={st}>
             {st} <span className="font-semibold text-[var(--text-2)] tabular-nums">{count(st)}</span>
           </span>
         ))}
+        {totals && (
+          <span>
+            Won <span className="font-semibold text-[var(--text-2)] tabular-nums">{totals.won}</span>
+          </span>
+        )}
         <span className="ml-auto">
-          Total <span className="font-semibold text-[var(--text-2)] tabular-nums">{total}</span>
+          Total <span className="font-semibold text-[var(--text-2)] tabular-nums">{totals?.total ?? 0}</span>
         </span>
       </div>
     </div>
@@ -139,14 +172,15 @@ export default function Dashboard() {
       {!s ? (
         <Spinner />
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-3 lg:gap-4 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3 lg:gap-4 mb-6">
           <StatCard label="Total organizations" value={s.totalOrganizations} icon={Building2} tone="blue" onClick={() => navigate("/organizations")} />
           <StatCard label="New organizations (7 days)" value={s.newOrganizations} icon={Sparkles} tone="cyan" onClick={() => navigate("/organizations")} />
-          <StatCard label="CRM opportunities" value={s.crmOpportunities} icon={KanbanSquare} tone="violet" onClick={() => navigate("/crm")} />
-          <StatCard label="Active opportunities" value={s.activeOpportunities} icon={Activity} tone="green" onClick={() => navigate("/crm")} />
-          <StatCard label="Proposals sent" value={s.proposalsSent} icon={FileText} tone="amber" onClick={() => navigate("/crm")} />
-          <StatCard label="Pilots" value={s.pilots} icon={FlaskConical} tone="green" onClick={() => navigate("/crm")} />
-          <StatCard label="Overdue follow-ups" value={s.overdueFollowUps} icon={AlarmClock} tone="gray" alert={s.overdueFollowUps > 0} onClick={() => navigate("/tasks?scope=overdue")} />
+          <StatCard label="Open relationship opportunities" value={s.pipelines.relationship.open} icon={KanbanSquare} tone="violet" onClick={() => navigate("/crm")} />
+          <StatCard label="Open project opportunities" value={s.pipelines.project.open} icon={FolderKanban} tone="blue" onClick={() => navigate("/crm?pipeline=project")} />
+          <StatCard label="Needing action" value={s.pipelines.relationship.needingAction + s.pipelines.project.needingAction} icon={Activity} tone="amber" onClick={() => navigate("/ai")} />
+          <StatCard label="In proposal" value={s.pipelines.relationship.inProposal + s.pipelines.project.inProposal} icon={FileText} tone="cyan" onClick={() => navigate("/crm")} />
+          <StatCard label="Pilots" value={s.pipelines.relationship.pilots + s.pipelines.project.pilots} icon={FlaskConical} tone="green" onClick={() => navigate("/crm")} />
+          <StatCard label="Won project opportunities" value={s.pipelines.project.won} icon={Trophy} tone="green" onClick={() => navigate("/crm?pipeline=project")} />
         </div>
       )}
 

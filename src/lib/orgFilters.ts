@@ -1,10 +1,9 @@
 import { useMemo, useState } from "react";
-import type { OrgType } from "../../shared/constants";
 import type { Organization } from "../../shared/types";
 
 export interface OrgFilters {
   q: string;
-  types: OrgType[]; // empty = all
+  types: string[]; // organization type names from the catalog; empty = all
   area: string;
   crm: "" | "in" | "out";
   potential: string;
@@ -21,7 +20,7 @@ export function useOrgFilters(orgs: Organization[] | null) {
         (!q || [o.name, o.area, o.address, o.sector, o.org_type].some((v) => v?.toLowerCase().includes(q))) &&
         (!filters.types.length || filters.types.includes(o.org_type)) &&
         (!filters.area || o.area === filters.area) &&
-        (!filters.crm || (filters.crm === "in" ? o.opportunity_id : !o.opportunity_id)) &&
+        (!filters.crm || (filters.crm === "in" ? o.crm_opportunity_count > 0 : !o.crm_opportunity_count)) &&
         (!filters.potential || (o.intelligence?.potential ?? "Unknown") === filters.potential),
     );
   }, [orgs, filters]);

@@ -1,20 +1,22 @@
 import { Router } from "express";
 import multer from "multer";
-import { db } from "../db";
-import type { ImportRecord, OrganizationInput } from "../../shared/types";
+import { db, type Queryable } from "../db";
+import type { FieldSource, ImportRecord, OrganizationInput, ProjectInput } from "../../shared/types";
 import { actorId, ah, HttpError, intParam } from "../lib/http";
 import { createSource } from "../lib/log";
 import { findDuplicates } from "../lib/duplicates";
 import { geocodeAddress, geocoderEnabled } from "../lib/geocode";
 import { normalizeName, normalizeRecord } from "../lib/normalize";
 import { insertOrganization, mergeIntoOrganization } from "../lib/organizations";
+import { createProject, normalizeProject } from "../lib/projects";
+import { findProjectDuplicates } from "../lib/projectDuplicates";
 import { detectFileKind, extractOrganizations, type ExtractionResult } from "../extraction";
 
 export const importsRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
 
 const SUMMARY_SELECT = `
-  SELECT i.id, i.filename, i.file_type, i.status, i.extraction_method, i.error, i.created_at, i.completed_at, u.name AS uploaded_by_name,
+  SELECT i.id, i.filename, i.file_type, i.kind, i.status, i.extraction_method, i.error, i.created_at, i.completed_at, u.name AS uploaded_by_name,
          json_build_object(
            'found', jsonb_array_length(i.records),
            'new', (SELECT count(*)::int FROM jsonb_array_elements(i.records) r WHERE r->'duplicate'->>'level' = 'new'),
@@ -23,9 +25,48 @@ const SUMMARY_SELECT = `
            'pending', (SELECT count(*)::int FROM jsonb_array_elements(i.records) r WHERE r->>'status' = 'pending'),
            'approved', (SELECT count(*)::int FROM jsonb_array_elements(i.records) r WHERE r->>'status' = 'approved'),
            'merged', (SELECT count(*)::int FROM jsonb_array_elements(i.records) r WHERE r->>'status' = 'merged'),
-           'rejected', (SELECT count(*)::int FROM jsonb_array_elements(i.records) r WHERE r->>'status' = 'rejected')
+           'rejected', (SELECT count(*)::int FROM jsonb_array_elements(i.records) r WHERE r->>'status' = 'rejected'),
+           'organizations', (SELECT count(*)::int FROM jsonb_array_elements(i.records) r WHERE coalesce(r->>'entity_type', 'organization') = 'organization'),
+           'projects', (SELECT count(*)::int FROM jsonb_array_elements(i.records) r WHERE r->>'entity_type' = 'project')
          ) AS stats
     FROM imports i LEFT JOIN users u ON u.id = i.uploaded_by`;
+
+/**
+ * Stage a project record (WSIS Phase 4 import foundation): validated with the same rules as the projects
+ * API and checked against existing projects. Invalid records are staged with the problem as a warning so a
+ * person can fix them with "edit"; nothing is saved before review. Project records are not geocoded yet.
+ */
+async function stageProject(q: Queryable, raw: ProjectInput, sourceLabel: string, index: number, seen: Map<string, number>): Promise<ImportRecord> {
+  const warnings: string[] = [];
+  let data: ProjectInput = { ...raw };
+  let fieldSources: Record<string, FieldSource> = {};
+  try {
+    const n = await normalizeProject(q, raw, sourceLabel);
+    data = n.data;
+    fieldSources = n.fieldSources;
+  } catch (e) {
+    warnings.push(`Needs a fix before approval: ${(e as Error).message}`);
+  }
+  delete (data as { entity_type?: string }).entity_type;
+  if (data.lat == null) warnings.push("Location unknown — the project will not appear on the map until a location is set");
+  const duplicate = data.name ? await findProjectDuplicates(q, data) : { level: "new" as const, candidates: [] };
+  const key = `project:${normalizeName(data.name ?? "")}`;
+  if (seen.has(key)) {
+    warnings.push(`Same project name as record #${seen.get(key)! + 1} in this file`);
+    if (duplicate.level === "new") duplicate.level = "possible_duplicate";
+  } else seen.set(key, index);
+  return {
+    index,
+    entity_type: "project",
+    data: data as unknown as OrganizationInput,
+    field_sources: fieldSources,
+    warnings,
+    duplicate,
+    status: "pending",
+    result_org_id: null,
+    result_project_id: null,
+  };
+}
 
 /** Agent 1 — Data Extraction Agent: document → organizations → normalise → geocode → duplicate check → staged records. */
 async function processImport(importId: number, sourceLabel: string, extract: () => Promise<ExtractionResult>) {
@@ -35,6 +76,10 @@ async function processImport(importId: number, sourceLabel: string, extract: () 
     const staged: ImportRecord[] = [];
     const seenInFile = new Map<string, number>();
     for (const [i, r] of raw.entries()) {
+      if ((r as { entity_type?: string }).entity_type === "project") {
+        staged.push(await stageProject(q, r as unknown as ProjectInput, sourceLabel, staged.length, seenInFile));
+        continue;
+      }
       const norm = normalizeRecord(r, sourceLabel);
       if (!norm.data.name) continue;
       if (norm.data.lat == null && geocoderEnabled() && (norm.data.address || norm.data.area)) {
@@ -52,15 +97,18 @@ async function processImport(importId: number, sourceLabel: string, extract: () 
         norm.warnings.push(`Same name as record #${seenInFile.get(key)! + 1} in this file`);
         if (duplicate.level === "new") duplicate.level = "possible_duplicate";
       } else seenInFile.set(key, staged.length);
-      staged.push({ index: staged.length, data: norm.data, field_sources: norm.field_sources, warnings: norm.warnings, duplicate, status: "pending", result_org_id: null });
+      staged.push({ index: staged.length, entity_type: "organization", data: norm.data, field_sources: norm.field_sources, warnings: norm.warnings, duplicate, status: "pending", result_org_id: null });
       if (i % 25 === 24) await q.query(`UPDATE imports SET records = $2 WHERE id = $1`, [importId, JSON.stringify(staged)]);
     }
-    await q.query(`UPDATE imports SET status = $2, records = $3, extraction_method = $4, error = $5 WHERE id = $1`, [
+    const nProjects = staged.filter((r) => r.entity_type === "project").length;
+    const kind = nProjects === 0 ? "organizations" : nProjects === staged.length ? "projects" : "mixed";
+    await q.query(`UPDATE imports SET status = $2, records = $3, extraction_method = $4, error = $5, kind = $6 WHERE id = $1`, [
       importId,
       staged.length ? "review" : "failed",
       JSON.stringify(staged),
       method,
       staged.length ? (notes.length ? notes.join("; ") : null) : ["No organizations could be identified in this file.", ...notes].join(" "),
+      kind,
     ]);
   } catch (e) {
     await q.query(`UPDATE imports SET status = 'failed', error = $2 WHERE id = $1`, [importId, (e as Error).message]);
@@ -108,8 +156,11 @@ importsRouter.post(
 importsRouter.post(
   "/json",
   ah(async (req, res) => {
-    const { records, source_label } = req.body as { records: OrganizationInput[]; source_label?: string };
+    // Records are organizations by default; a record with entity_type "project" is staged as a project.
+    const { records, source_label } = req.body as { records: (OrganizationInput & { entity_type?: string })[]; source_label?: string };
     if (!Array.isArray(records) || !records.length) throw new HttpError(400, "records must be a non-empty array");
+    const badType = records.find((r) => r.entity_type !== undefined && r.entity_type !== "organization" && r.entity_type !== "project");
+    if (badType) throw new HttpError(400, `entity_type must be "organization" or "project"`);
     const actor = actorId(req);
     const label = source_label?.trim() || "API data feed";
     const { rows } = await db().query<{ id: number }>(`INSERT INTO imports (filename, file_type, uploaded_by) VALUES ($1, 'api', $2) RETURNING id`, [label, actor]);
@@ -121,6 +172,43 @@ importsRouter.post(
 );
 
 type Decision = "approve" | "keep_separate" | "merge" | "reject" | "edit";
+
+/** Review decisions for staged project records. */
+async function decideProject(
+  q: Queryable,
+  imp: { source_id: number; filename: string },
+  rec: ImportRecord,
+  decision: Decision,
+  body: { data?: ProjectInput },
+  actor: number | null,
+  who: string,
+) {
+  const current = rec.data as unknown as ProjectInput;
+  if (decision === "edit") {
+    if (!body.data) throw new HttpError(400, "data is required");
+    const n = await normalizeProject(q, { ...current, ...body.data }, `${imp.filename} (edited by ${who})`);
+    rec.data = n.data as unknown as OrganizationInput;
+    rec.field_sources = { ...rec.field_sources, ...n.fieldSources };
+    rec.warnings = n.data.lat == null ? ["Location unknown — the project will not appear on the map until a location is set"] : [];
+    rec.duplicate = await findProjectDuplicates(q, n.data);
+    return;
+  }
+  if (decision === "reject") {
+    rec.status = "rejected";
+    return;
+  }
+  if (decision === "merge") throw new HttpError(400, "Merging an imported project into an existing project is not supported yet. Approve it as a separate project, edit it, or reject it.");
+  if (decision === "approve") {
+    const fresh = await findProjectDuplicates(q, current);
+    if (fresh.level !== "new") {
+      rec.duplicate = fresh;
+      throw new HttpError(409, "Possible duplicate project found", { duplicate: fresh, record: rec });
+    }
+  }
+  const project = await createProject(q, current, { sourceId: imp.source_id, sourceLabel: `Import “${imp.filename}” (approved by ${who})`, actorId: actor });
+  rec.result_project_id = project.id;
+  rec.status = "approved";
+}
 
 async function applyDecision(importId: number, index: number, decision: Decision, body: { data?: OrganizationInput; merge_into?: number }, actor: number | null) {
   return db().tx(async (q) => {
@@ -136,7 +224,9 @@ async function applyDecision(importId: number, index: number, decision: Decision
     const { rows: u } = await q.query<{ name: string }>(`SELECT name FROM users WHERE id = $1`, [actor]);
     const who = u[0]?.name ?? "unknown user";
 
-    if (decision === "edit") {
+    if (rec.entity_type === "project") {
+      await decideProject(q, imp, rec, decision, body as { data?: ProjectInput }, actor, who);
+    } else if (decision === "edit") {
       if (!body.data) throw new HttpError(400, "data is required");
       const norm = normalizeRecord(body.data, `${imp.filename} (edited by ${who})`);
       if (!norm.data.name) throw new HttpError(400, "Organization name is required");

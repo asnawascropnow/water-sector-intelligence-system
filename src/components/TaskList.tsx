@@ -46,6 +46,18 @@ export default function TaskList({ tasks, showOrg = true, emptyText = "No follow
                   {t.organization_name}
                 </Link>
               )}
+              {t.project_id && (
+                <Link to={t.opportunity_id ? `/crm/${t.opportunity_id}` : `/projects/${t.project_id}`} title={t.opportunity_id ? "Project opportunity task" : "Project task"}>
+                  <Badge tone="blue">
+                    {t.opportunity_id ? "Project opp." : "Project"}: {t.project_name}
+                  </Badge>
+                </Link>
+              )}
+              {!t.project_id && t.opportunity_id && t.opportunity_type && t.opportunity_type !== "Customer" && (
+                <Link to={`/crm/${t.opportunity_id}`}>
+                  <Badge>{t.opportunity_title ?? t.opportunity_type}</Badge>
+                </Link>
+              )}
               <span>{t.task_type}</span>
               <span aria-hidden>·</span>
               <span className="inline-flex items-center gap-1">{t.assigned_name && <Avatar name={t.assigned_name} size={16} />}{t.assigned_name ?? "Unassigned"}</span>

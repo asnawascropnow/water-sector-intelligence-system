@@ -1,8 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { Bot, Building2, ExternalLink, GitMerge, History, KanbanSquare, ListChecks, Pencil, PhoneCall, Plus, Search, Sparkles, Users } from "lucide-react";
-import { CALL_STATUSES, CRM_STATUSES, PILOT_STATUSES, PROPOSAL_STATUSES } from "../../shared/constants";
-import type { Activity, Contact, Opportunity, Organization, Recommendation, Task } from "../../shared/types";
+import { Bot, Building2, Droplets, ExternalLink, FolderKanban, GitMerge, HardHat, History, KanbanSquare, ListChecks, Pencil, PhoneCall, Plus, Search, Sparkles, Users } from "lucide-react";
+import { CALL_STATUSES, PILOT_STATUSES, PROPOSAL_STATUSES } from "../../shared/constants";
+import type { Activity, Contact, Fact, Opportunity, Organization, ProjectStakeholder, Recommendation, Task, WaterOpportunity } from "../../shared/types";
+import WaterOpportunitiesPanel, { ProjectWaterOpportunities, WaterSummaryBadges } from "../components/water/WaterOpportunitiesPanel";
+import FactsPanel from "../components/facts/FactsPanel";
+import { definitionsForOrganization, profilesForType, showsIntelligence, stageTone } from "../lib/projectUtils";
+import { findPipeline, opportunityTitle, splitOpportunities } from "../lib/crmUtils";
 import { api } from "../lib/api";
 import { useApi } from "../lib/useApi";
 import { displayUrl, dueLabel, formatDate, relativeDays } from "../lib/format";
@@ -24,6 +28,10 @@ interface Detail {
   activities: Activity[];
   tasks: Task[];
   opportunity: (Opportunity & { owner_name: string | null }) | null;
+  opportunities: Opportunity[];
+  projects: ProjectStakeholder[];
+  facts: Fact[];
+  water_opportunities?: { organization: WaterOpportunity[]; projects: WaterOpportunity[] };
   suggestions: Recommendation[];
   recommendations: Recommendation[];
 }
@@ -42,7 +50,9 @@ function InfoRow({ label, value, fs, children }: { label: string; value?: React.
 }
 
 function CrmPanel({ opp, contacts }: { opp: Detail["opportunity"] & object; contacts: Contact[] }) {
-  const { activeUsers, invalidate, toast } = useApp();
+  const { activeUsers, catalog, invalidate, toast } = useApp();
+  // Stages of the opportunity's own pipeline, from the database catalog.
+  const stages = (findPipeline(catalog?.pipelines, opp.pipeline)?.stages ?? []).map((s) => s.name);
   const [notes, setNotes] = useState(opp.notes ?? "");
   useEffect(() => setNotes(opp.notes ?? ""), [opp.notes]);
   async function patch(body: object) {
@@ -57,7 +67,7 @@ function CrmPanel({ opp, contacts }: { opp: Detail["opportunity"] & object; cont
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
         <Field label="Status">
-          <Select value={opp.status} onChange={(e) => patch({ status: e.target.value })} options={CRM_STATUSES} />
+          <Select value={opp.status} onChange={(e) => patch({ status: e.target.value })} options={stages.length ? stages : [opp.status]} />
         </Field>
         <Field label="Owner">
           <Select value={opp.owner_id ?? ""} onChange={(e) => patch({ owner_id: e.target.value ? Number(e.target.value) : null })} options={activeUsers.map((u) => ({ value: u.id, label: u.name }))} placeholder="Unassigned" />
@@ -365,6 +375,161 @@ function MergeDialog({ org, open, onClose }: { org: Organization; open: boolean;
   );
 }
 
+/** Projects this organization is involved in, with its role on each (from the organization detail response). */
+function OrganizationProjectsCard({ projects }: { projects: ProjectStakeholder[] }) {
+  return (
+    <Card
+      icon={FolderKanban}
+      title="Projects"
+      description={projects.length ? `${new Set(projects.map((p) => p.project_id)).size} project(s)` : undefined}
+      actions={
+        <Link to="/projects" className="text-xs font-medium text-[var(--accent-text)] hover:underline">
+          All projects
+        </Link>
+      }
+    >
+      {!projects.length ? (
+        <EmptyState title="Not linked to any project yet" icon={FolderKanban} compact>
+          Open a project and add this organization as a stakeholder.
+        </EmptyState>
+      ) : (
+        <ul className="divide-y divide-[var(--border)] -my-2">
+          {projects.map((p) => (
+            <li key={p.id} className="py-2.5">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <Link to={`/projects/${p.project_id}`} className="text-sm font-medium hover:underline">
+                  {p.project_name}
+                </Link>
+                <Badge tone="purple">{p.role}</Badge>
+                {p.is_primary && <Badge tone="blue">Primary</Badge>}
+                <Badge tone={stageTone(p.lifecycle_stage)}>{p.lifecycle_stage}</Badge>
+                {p.water_opportunity_count ? (
+                  <Badge tone="blue">
+                    <Droplets size={11} /> {p.water_opportunity_count} water
+                  </Badge>
+                ) : null}
+              </div>
+              <div className="text-xs text-[var(--text-3)] mt-0.5">
+                {[p.project_type, p.project_area].filter(Boolean).join(" · ") || "Type and location unknown"}
+                {p.source ? ` · Source: ${p.source}` : ""}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+}
+
+/** Opportunities beyond the primary one: other relationship types and project-linked opportunities. */
+/**
+ * The organization's other opportunities, kept in two separate lists: its own relationship opportunities, and
+ * project opportunities where it is the customer (each belongs to a project — not an organization relationship).
+ */
+function OtherOpportunities({ primaryId, items, onAddRelationship }: { primaryId: number | null; items: Opportunity[]; onAddRelationship: () => void }) {
+  const { relationship, project } = splitOpportunities(items.filter((o) => o.id !== primaryId));
+  return (
+    <div className="mt-4 pt-4 border-t border-[var(--border)] space-y-4">
+      <div>
+        <div className="flex items-center justify-between gap-2 mb-1.5">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-3)]">{primaryId ? "Other relationship opportunities" : "Relationship opportunities"}</h3>
+          {primaryId && (
+            <Button size="sm" variant="ghost" onClick={onAddRelationship}>
+              <Plus size={12} /> Relationship
+            </Button>
+          )}
+        </div>
+        {relationship.length ? (
+          <ul className="divide-y divide-[var(--border)]">
+            {relationship.map((o) => (
+              <li key={o.id} className="py-2 text-sm flex flex-wrap items-center gap-1.5">
+                <Link to={`/crm/${o.id}`} className="font-medium hover:underline">
+                  {opportunityTitle(o)}
+                </Link>
+                <Badge tone={statusTone(o.status)}>{o.status}</Badge>
+                <span className="text-xs text-[var(--text-3)]">{o.owner_name ?? "Unassigned"}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-xs text-[var(--text-3)]">{primaryId ? "None." : "No organization-level relationship yet."}</p>
+        )}
+      </div>
+      <div>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-3)] mb-1">Project opportunities</h3>
+        <p className="text-[11px] text-[var(--text-3)] mb-1.5">Opportunities on specific projects where this organization is the customer. They are not organization-level relationships.</p>
+        {project.length ? (
+          <ul className="divide-y divide-[var(--border)]">
+            {project.map((o) => (
+              <li key={o.id} className="py-2 text-sm">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <Link to={`/crm/${o.id}`} className="font-medium hover:underline">
+                    {opportunityTitle(o)}
+                  </Link>
+                  <Badge tone="blue">{o.status}</Badge>
+                  {o.interventions?.map((i) => (
+                    <Badge key={i} tone="blue">
+                      <Droplets size={10} /> {i}
+                    </Badge>
+                  ))}
+                </div>
+                <div className="text-xs text-[var(--text-3)] mt-0.5">
+                  Project:{" "}
+                  <Link to={`/projects/${o.project_id}?tab=crm`} className="text-[var(--accent-text)] hover:underline">
+                    {o.project_name}
+                  </Link>
+                  {o.stakeholder_roles?.length ? ` · Role: ${o.stakeholder_roles.join(", ")}` : ""} · {o.owner_name ?? "Unassigned"}
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-xs text-[var(--text-3)]">None.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Built Environment Intelligence: sourced facts for architects, developers, contractors (profiles come from
+ * the saved views that include this organization's type). Hidden for unrelated types unless facts exist.
+ */
+function BuiltEnvironmentCard({ org, facts }: { org: Organization; facts: Fact[] }) {
+  const { taxonomy, catalog } = useApp();
+  const defs = catalog?.factDefinitions ?? [];
+  if (!catalog || !showsIntelligence(org.org_type, taxonomy, defs, facts)) return null;
+  const profiles = profilesForType(org.org_type, taxonomy);
+  const definitions = definitionsForOrganization(defs, profiles.map((p) => p.key), facts);
+  return (
+    <Card icon={HardHat} title="Built Environment Intelligence" description={profiles.length ? `${profiles.map((p) => p.label).join(" · ")} profile` : "Recorded facts"}>
+      <FactsPanel basePath={`/organizations/${org.id}`} definitions={definitions} facts={facts} emptyHint="Add what you learn from the firm's website, projects, conversations or documents — each with its source." />
+    </Card>
+  );
+}
+
+/**
+ * Water opportunities for the organization itself, kept apart from those on its projects: a project
+ * opportunity belongs to the project and is not implied for the organization as a whole.
+ */
+function WaterOpportunitiesCard({ org, water, opportunities }: { org: Organization; water: NonNullable<Detail["water_opportunities"]>; opportunities: Opportunity[] }) {
+  return (
+    <Card icon={Droplets} title="Water opportunities" actions={<WaterSummaryBadges items={water.organization} />}>
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-3)] mb-2">Organization-level</h3>
+          <WaterOpportunitiesPanel items={water.organization} target={{ kind: "organization", id: org.id, name: org.name }} crmOpportunities={opportunities} />
+        </div>
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-3)] mb-1">On this organization's projects</h3>
+          <p className="text-[11px] text-[var(--text-3)] mb-2">Reviewed and converted on each project page.</p>
+          <ProjectWaterOpportunities items={water.projects} />
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 export default function OrganizationDetails() {
   const { id } = useParams();
   const { data, error } = useApi<Detail>(`/organizations/${id}`);
@@ -376,7 +541,8 @@ export default function OrganizationDetails() {
   if (error) return <ErrorNote error={error} />;
   if (!data) return <Spinner />;
   if (data.merged_into) return <Navigate to={`/organizations/${data.merged_into}`} replace />;
-  const { organization: o, contacts, activities, tasks, opportunity, suggestions, recommendations } = data;
+  const { organization: o, contacts, activities, tasks, opportunity, opportunities = [], projects = [], facts = [], suggestions, recommendations } = data;
+  const water = data.water_opportunities ?? { organization: [], projects: [] };
   const fs = o.field_sources ?? {};
 
   return (
@@ -393,7 +559,13 @@ export default function OrganizationDetails() {
             <Badge tone={confidenceTone(o.data_confidence)} title="How complete and verified this record is">
               Data confidence: {o.data_confidence}
             </Badge>
-            {opportunity ? <Badge tone={statusTone(opportunity.status)}>CRM: {opportunity.status}</Badge> : <Badge>Not in CRM</Badge>}
+            {opportunity ? (
+              <Badge tone={statusTone(opportunity.status)}>CRM: {opportunity.status}</Badge>
+            ) : opportunities.length ? (
+              <Badge tone="blue">{opportunities.length === 1 ? "1 project opportunity" : `${opportunities.length} project opportunities`}</Badge>
+            ) : (
+              <Badge>Not in CRM</Badge>
+            )}
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -449,24 +621,41 @@ export default function OrganizationDetails() {
               </div>
             )}
           </Card>
+          <BuiltEnvironmentCard org={o} facts={facts} />
+          <WaterOpportunitiesCard org={o} water={water} opportunities={opportunities} />
           <IntelligenceCard org={o} suggestions={suggestions} />
         </div>
 
         <div className="space-y-6">
           <Card icon={KanbanSquare} title="CRM">
             {opportunity ? (
-              <CrmPanel opp={opportunity} contacts={contacts} />
+              <>
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <span className="text-sm">
+                    <span className="text-[var(--text-3)]">Relationship:</span> <span className="font-medium">{opportunityTitle(opportunity)}</span>
+                  </span>
+                  <Link to={`/crm/${opportunity.id}`} className="text-xs font-medium text-[var(--accent-text)] hover:underline">
+                    Open opportunity →
+                  </Link>
+                </div>
+                <CrmPanel opp={opportunity} contacts={contacts} />
+                <OtherOpportunities primaryId={opportunity.id} items={opportunities} onAddRelationship={() => setCrmOpen(true)} />
+              </>
             ) : (
               <div className="text-sm text-[var(--text-2)]">
-                This organization is in the discovery database but not in the CRM.
+                {opportunities.length
+                  ? "No organization-level relationship yet. Project opportunities are listed below."
+                  : "This organization is in the discovery database but not in the CRM."}
                 <div className="mt-3">
                   <Button variant="primary" onClick={() => setCrmOpen(true)}>
                     Add to CRM
                   </Button>
                 </div>
+                <OtherOpportunities primaryId={null} items={opportunities} onAddRelationship={() => setCrmOpen(true)} />
               </div>
             )}
           </Card>
+          <OrganizationProjectsCard projects={projects} />
           {opportunity && (
             <Card icon={PhoneCall} title="Record interaction" description="Contact attempts, calls, proposals and notes">
               <InteractionForm opportunityId={opportunity.id} ownerId={opportunity.owner_id} />
