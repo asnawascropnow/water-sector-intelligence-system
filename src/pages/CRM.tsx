@@ -18,7 +18,7 @@ function OppCard({ o, onDragStart }: { o: Opportunity; onDragStart: (id: number)
         e.dataTransfer.setData("text/plain", String(o.id));
         onDragStart(o.id);
       }}
-      className="block rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 shadow-[var(--shadow-card)] hover:border-[var(--border-strong)] hover:shadow-md transition cursor-grab active:cursor-grabbing"
+      className="block rounded-2xl border border-[var(--border)] bg-[var(--surface)] dark:bg-[var(--surface-2)] p-3.5 shadow-[var(--shadow-card)] hover:border-[var(--border-strong)] transition cursor-grab active:cursor-grabbing"
     >
       <div className="text-[13px] font-semibold leading-snug">{o.organization_name}</div>
       <div className="text-xs text-[var(--text-3)] mt-0.5">
@@ -76,7 +76,7 @@ export default function CRM() {
           const id = Number(e.dataTransfer.getData("text/plain")) || dragging;
           if (id) move(id, status);
         }}
-        className={cx("w-72 shrink-0 rounded-xl p-2.5 flex flex-col min-h-[calc(100vh-15rem)] border", muted ? "bg-gray-50/60 dark:bg-white/[0.02] border-dashed border-[var(--border)]" : "bg-[#eceef2] dark:bg-white/[0.04] border-transparent", over === status && "ring-2 ring-[var(--accent)]")}
+        className={cx("w-72 shrink-0 rounded-3xl p-3 flex flex-col min-h-[calc(100vh-15rem)] border", muted ? "bg-zinc-50 dark:bg-transparent border-dashed border-[var(--border)]" : "bg-zinc-200/60 dark:bg-[var(--surface)] border-transparent dark:border-[var(--border)]", over === status && "ring-2 ring-[var(--accent)]")}
       >
         <div className="flex items-center justify-between px-1.5 pt-0.5 pb-2.5">
           <span className={cx("text-xs font-semibold", muted ? "text-[var(--text-3)]" : "text-[var(--text)]")}>{status}</span>

@@ -11,7 +11,9 @@ import { importsRouter } from "./routes/imports";
 import { crmRouter } from "./routes/crm";
 import { tasksRouter } from "./routes/tasks";
 import { aiRouter, dashboardRouter, systemRouter, usersRouter } from "./routes/misc";
+import { emailRouter } from "./routes/email";
 import { refreshRecommendations } from "./agents/runner";
+import { startEmailScheduler, stopEmailScheduler } from "./email/scheduler";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.API_PORT || process.env.PORT || 3001);
@@ -31,6 +33,7 @@ async function main() {
   app.use("/api/dashboard", dashboardRouter);
   app.use("/api/ai", aiRouter);
   app.use("/api/system", systemRouter);
+  app.use("/api/email", emailRouter);
   app.use("/api", (_req, res) => res.status(404).json({ error: "Not found" }));
 
   // Production: serve the built client
@@ -48,12 +51,27 @@ async function main() {
     res.status(500).json({ error: e?.message || "Internal error" });
   });
 
-  app.listen(PORT, () => console.log(`[api] listening on http://localhost:${PORT}`));
+  const server = app.listen(PORT, () => console.log(`[api] listening on http://localhost:${PORT}`));
 
   // Daily Reminder / Next Action agents: refresh recommendations on start and every hour.
   const tick = () => refreshRecommendations(db()).catch((e) => console.error("[agents]", e));
   tick();
   setInterval(tick, 60 * 60 * 1000);
+
+  // Email outreach worker (dry-run unless EMAIL_DRY_RUN=false). Started once; stopped cleanly on shutdown.
+  startEmailScheduler(db());
+  let shuttingDown = false;
+  const shutdown = async (signal: string) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    console.log(`[api] ${signal} received, shutting down`);
+    server.close();
+    await stopEmailScheduler();
+    await db().close().catch(() => undefined);
+    process.exit(0);
+  };
+  process.once("SIGINT", () => void shutdown("SIGINT"));
+  process.once("SIGTERM", () => void shutdown("SIGTERM"));
 }
 
 main().catch((e) => {
