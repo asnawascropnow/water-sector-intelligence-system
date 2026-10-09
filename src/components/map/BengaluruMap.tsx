@@ -134,7 +134,10 @@ export default function BengaluruMap({ organizations, focusId = null, onAddToCrm
   const maxBounds = L.latLngBounds([b.south - pad, b.west - pad], [b.north + pad, b.east + pad]);
   const custom = import.meta.env.VITE_MAP_TILE_URL as string | undefined;
   const esri = "https://server.arcgisonline.com/ArcGIS/rest/services";
-  const tiles = custom || (theme === "dark" ? `${esri}/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}` : `${esri}/World_Street_Map/MapServer/tile/{z}/{y}/{x}`);
+  const dark = !custom && theme === "dark";
+  // Dark mode: Esri dark-grey canvas + Esri transportation overlay (roads and road names) + place labels.
+  // The canvas alone is too low-contrast to read streets; the overlay restores them. Tuned in index.css (.wsis-map-*).
+  const tiles = custom || (dark ? `${esri}/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}` : `${esri}/World_Street_Map/MapServer/tile/{z}/{y}/{x}`);
   const attribution = custom
     ? (import.meta.env.VITE_MAP_TILE_ATTRIBUTION as string | undefined) ?? "&copy; OpenStreetMap contributors"
     : "Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors, and the GIS user community";
@@ -149,10 +152,11 @@ export default function BengaluruMap({ organizations, focusId = null, onAddToCrm
       maxBoundsViscosity={0.8}
       scrollWheelZoom={scrollWheelZoom}
       className={className}
-      style={{ background: theme === "dark" ? "#0b0f15" : "#e8eef3" }}
+      style={{ background: dark ? "#2a2a2e" : "#e8eef3" }}
     >
-      <TileLayer key={tiles} url={tiles} attribution={attribution} maxNativeZoom={custom ? 19 : 18} />
-      {!custom && theme === "dark" && <TileLayer key="dark-labels" url={`${esri}/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}`} maxNativeZoom={16} />}
+      <TileLayer key={tiles} url={tiles} attribution={attribution} maxNativeZoom={custom ? 19 : dark ? 16 : 18} className={dark ? "wsis-map-base" : undefined} />
+      {dark && <TileLayer key="dark-roads" url={`${esri}/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}`} maxNativeZoom={18} className="wsis-map-roads" />}
+      {dark && <TileLayer key="dark-labels" url={`${esri}/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}`} maxNativeZoom={16} />}
       <MarkerClusterGroup>
         {located.map((o) => (
           <Marker

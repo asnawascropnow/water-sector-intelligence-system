@@ -4,7 +4,7 @@ import { useApp } from "../context/AppContext";
 
 /** Fetch JSON from the API; refetches when the path changes or when data is invalidated app-wide. */
 export function useApi<T>(path: string | null) {
-  const { dataVersion } = useApp();
+  const { dataVersion, currentUser } = useApp();
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(Boolean(path));
@@ -29,7 +29,7 @@ export function useApi<T>(path: string | null) {
 
   useEffect(() => {
     load();
-  }, [load, dataVersion]);
+  }, [load, dataVersion, currentUser?.id]); // refetch as the acting user (permissions differ per user)
 
   return { data, error, loading, reload: load, setData };
 }

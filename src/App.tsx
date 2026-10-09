@@ -14,6 +14,8 @@ import OpportunityDetails from "./pages/OpportunityDetails";
 import Tasks from "./pages/Tasks";
 import AIRecommendations from "./pages/AIRecommendations";
 import Settings from "./pages/Settings";
+import EmailCampaigns from "./pages/EmailCampaigns";
+import EmailCampaign from "./pages/EmailCampaign";
 
 export default function App() {
   return (
@@ -32,6 +34,8 @@ export default function App() {
             <Route path="/crm/:id" element={<OpportunityDetails />} />
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/ai" element={<AIRecommendations />} />
+            <Route path="/email" element={<EmailCampaigns />} />
+            <Route path="/email/:id" element={<EmailCampaign />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>

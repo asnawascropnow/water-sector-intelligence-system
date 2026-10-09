@@ -21,6 +21,12 @@ const DOT: Record<string, string> = {
   merged: "bg-neutral-500",
   enriched: "bg-purple-500",
   ai_assessed: "bg-purple-400",
+  email_enrolled: "bg-sky-400",
+  email_sent: "bg-sky-600",
+  email_reply: "bg-emerald-600",
+  email_bounced: "bg-red-500",
+  email_unsubscribed: "bg-red-400",
+  email_stopped: "bg-neutral-500",
 };
 
 /** Complete, append-only activity timeline (spec §16). */

@@ -29,7 +29,7 @@ function OppCard({ o, onDragStart }: { o: Opportunity; onDragStart: (id: number)
         onDragStart(o.id);
       }}
       className={cx(
-        "block rounded-lg border bg-[var(--surface)] p-3 shadow-[var(--shadow-card)] hover:shadow-md transition cursor-grab active:cursor-grabbing",
+        "block rounded-2xl border bg-[var(--surface)] dark:bg-[var(--surface-2)] p-3.5 shadow-[var(--shadow-card)] transition cursor-grab active:cursor-grabbing",
         project ? "border-blue-200 dark:border-blue-900 border-l-4 border-l-blue-500" : "border-[var(--border)] hover:border-[var(--border-strong)]",
       )}
       aria-label={`${project ? "Project opportunity" : "Relationship opportunity"}: ${opportunityTitle(o)}`}
@@ -150,8 +150,8 @@ export default function CRM() {
           if (id) move(id, s.name);
         }}
         className={cx(
-          "w-72 shrink-0 rounded-xl p-2.5 flex flex-col min-h-[calc(100vh-19rem)] border",
-          muted ? "bg-gray-50/60 dark:bg-white/[0.02] border-dashed border-[var(--border)]" : "bg-[#eceef2] dark:bg-white/[0.04] border-transparent",
+          "w-72 shrink-0 rounded-3xl p-3 flex flex-col min-h-[calc(100vh-19rem)] border",
+          muted ? "bg-zinc-50 dark:bg-transparent border-dashed border-[var(--border)]" : "bg-zinc-200/60 dark:bg-[var(--surface)] border-transparent dark:border-[var(--border)]",
           over === s.name && "ring-2 ring-[var(--accent)]",
         )}
       >

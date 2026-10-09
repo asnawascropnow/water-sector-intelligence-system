@@ -3,6 +3,7 @@ import { claimPgliteDataDir, initDb, db } from "./db";
 import { seed } from "./db/seed";
 import { createApp } from "./app";
 import { refreshRecommendations } from "./agents/runner";
+import { startEmailScheduler, stopEmailScheduler } from "./email/scheduler";
 
 const PORT = Number(process.env.API_PORT || process.env.PORT || 3001);
 
@@ -12,12 +13,27 @@ async function main() {
   await seed(database);
   console.log(`[db] ${database.kind === "postgres" ? "PostgreSQL (DATABASE_URL)" : "embedded PGlite + PostGIS (.data/pglite)"} ready`);
 
-  createApp().listen(PORT, () => console.log(`[api] listening on http://localhost:${PORT}`));
+  const server = createApp().listen(PORT, () => console.log(`[api] listening on http://localhost:${PORT}`));
 
   // Daily Reminder / Next Action agents: refresh recommendations on start and every hour.
   const tick = () => refreshRecommendations(db()).catch((e) => console.error("[agents]", e));
   tick();
   setInterval(tick, 60 * 60 * 1000);
+
+  // Email outreach worker (dry-run unless EMAIL_DRY_RUN=false). Started once; stopped cleanly on shutdown.
+  startEmailScheduler(db());
+  let shuttingDown = false;
+  const shutdown = async (signal: string) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    console.log(`[api] ${signal} received, shutting down`);
+    server.close();
+    await stopEmailScheduler();
+    await db().close().catch(() => undefined);
+    process.exit(0);
+  };
+  process.once("SIGINT", () => void shutdown("SIGINT"));
+  process.once("SIGTERM", () => void shutdown("SIGTERM"));
 }
 
 main().catch((e) => {

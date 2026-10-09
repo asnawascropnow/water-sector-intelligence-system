@@ -10,6 +10,7 @@ import { tasksRouter } from "./routes/tasks";
 import { projectsRouter } from "./routes/projects";
 import { waterRouter } from "./routes/water";
 import { aiRouter, dashboardRouter, metaRouter, systemRouter, usersRouter } from "./routes/misc";
+import { emailRouter } from "./routes/email";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -37,6 +38,7 @@ export function createApp(opts: AppOptions = {}): Express {
   app.use("/api/ai", aiRouter);
   app.use("/api/system", systemRouter);
   app.use("/api/meta", metaRouter);
+  app.use("/api/email", emailRouter);
   app.use("/api", (_req, res) => res.status(404).json({ error: "Not found" }));
 
   // Production: serve the built client
