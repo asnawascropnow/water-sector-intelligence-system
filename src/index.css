@@ -6,36 +6,46 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
-/* Design tokens. Components use these through var(--…) so light/dark stay in sync. */
+/* Design tokens. Components use these through var(--…) so light/dark stay in sync.
+   Dark (default) follows the Cropnow look: zinc-950 page, zinc-900 surfaces, zinc-800 borders, green accent. */
 :root {
-  --accent: #0b63ce;
-  --accent-hover: #0954b0;
-  --accent-soft: #eaf2fd;
-  --accent-text: #0b5cbf;
-  --page: #f6f7f9;
+  --accent: #3f7a58;
+  --accent-hover: #356a4b;
+  --accent-soft: #e8f2ec;
+  --accent-text: #2f6b4a;
+  --page: #f4f4f5;
   --surface: #ffffff;
-  --surface-2: #f9fafb;
-  --border: #e5e7eb;
-  --border-strong: #d1d5db;
-  --text: #111827;
-  --text-2: #4b5563;
-  --text-3: #6b7280;
-  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.04);
+  --surface-2: #f4f4f5; /* inset areas: table headers, chips, modal footers, hovers */
+  --surface-3: #e4e4e7; /* pills on surface */
+  --input: #ffffff;
+  --sidebar: #ffffff;
+  --header: #ffffff;
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
+  --text: #09090b;
+  --text-2: #3f3f46;
+  --text-3: #71717a;
+  --shadow-card: 0 1px 2px rgba(9, 9, 11, 0.04);
 }
 .dark {
-  --accent: #4d8ff0;
-  --accent-hover: #6aa2f4;
-  --accent-soft: rgba(77, 143, 240, 0.14);
-  --accent-text: #8ab6f7;
-  --page: #0a0c10;
-  --surface: #11141a;
-  --surface-2: #161a21;
-  --border: #232832;
-  --border-strong: #2f3642;
-  --text: #e8ebf0;
-  --text-2: #b4bcc8;
-  --text-3: #8b94a3;
+  --accent: #4a8965;
+  --accent-hover: #56a077;
+  --accent-soft: rgba(74, 137, 101, 0.16);
+  --accent-text: #69ae8b;
+  --page: #09090b;
+  --surface: #18181b;
+  --surface-2: #09090b;
+  --surface-3: #27272a;
+  --input: #09090b;
+  --sidebar: #09090b;
+  --header: #18181b;
+  --border: #27272a;
+  --border-strong: #3f3f46;
+  --text: #ffffff;
+  --text-2: #d4d4d8;
+  --text-3: #a1a1aa;
   --shadow-card: none;
+  color-scheme: dark;
 }
 
 html {
@@ -47,6 +57,18 @@ body {
   background: var(--page);
   color: var(--text);
   font-family: var(--font-sans);
+}
+
+/* Data tables (every table inside the app shell): uppercase column headings on an inset header row. */
+main table thead {
+  background: var(--surface-2);
+}
+main table thead th {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-3);
 }
 
 /* Scrollbars */
@@ -89,9 +111,23 @@ body {
 .leaflet-container {
   font-family: var(--font-sans);
 }
+/* Dark basemap (see BengaluruMap): lift the grey canvas slightly, mute the road overlay to neutral greys. */
+.wsis-map-base {
+  filter: brightness(1.12) contrast(1.05);
+}
+.wsis-map-roads {
+  filter: saturate(0.25) brightness(0.85);
+}
 .leaflet-popup-content {
   margin: 12px 14px;
 }
 .leaflet-popup-content-wrapper {
   border-radius: 10px;
+}
+.bwi-marker-project {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: #0b63ce;
+  transform: rotate(45deg);
 }

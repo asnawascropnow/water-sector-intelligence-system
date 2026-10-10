@@ -90,7 +90,7 @@ export function OrgPopupCard({ org, onAddToCrm }: { org: Organization; onAddToCr
           "Unknown"
         )}
       </Row>
-      <Row label="Status">{org.crm_status ?? "Not Contacted"}</Row>
+      <Row label="Status">{org.crm_status ?? (org.project_opportunity_count ? "Project opportunities only" : "Not Contacted")}</Row>
       <Row label="Opportunity">
         {org.intelligence?.potential ?? "Unknown"}
         {org.intelligence?.potential && org.intelligence.potential !== "Unknown" && <span className="text-[var(--text-3)]"> (AI Inference)</span>}
@@ -99,8 +99,8 @@ export function OrgPopupCard({ org, onAddToCrm }: { org: Organization; onAddToCr
         <Link to={`/organizations/${org.id}`} className="flex-1 text-center text-[12px] font-medium rounded border border-neutral-300 px-2 py-1.5 !text-neutral-800 hover:bg-neutral-50">
           View Details
         </Link>
-        {org.opportunity_id ? (
-          <Link to="/crm" className="flex-1 text-center text-[12px] font-medium rounded px-2 py-1.5 bg-neutral-100 !text-neutral-700">
+        {org.crm_opportunity_count > 0 ? (
+          <Link to={`/organizations/${org.id}`} className="flex-1 text-center text-[12px] font-medium rounded px-2 py-1.5 bg-neutral-100 !text-neutral-700">
             In CRM
           </Link>
         ) : (
@@ -134,7 +134,10 @@ export default function BengaluruMap({ organizations, focusId = null, onAddToCrm
   const maxBounds = L.latLngBounds([b.south - pad, b.west - pad], [b.north + pad, b.east + pad]);
   const custom = import.meta.env.VITE_MAP_TILE_URL as string | undefined;
   const esri = "https://server.arcgisonline.com/ArcGIS/rest/services";
-  const tiles = custom || (theme === "dark" ? `${esri}/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}` : `${esri}/World_Street_Map/MapServer/tile/{z}/{y}/{x}`);
+  const dark = !custom && theme === "dark";
+  // Dark mode: Esri dark-grey canvas + Esri transportation overlay (roads and road names) + place labels.
+  // The canvas alone is too low-contrast to read streets; the overlay restores them. Tuned in index.css (.wsis-map-*).
+  const tiles = custom || (dark ? `${esri}/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}` : `${esri}/World_Street_Map/MapServer/tile/{z}/{y}/{x}`);
   const attribution = custom
     ? (import.meta.env.VITE_MAP_TILE_ATTRIBUTION as string | undefined) ?? "&copy; OpenStreetMap contributors"
     : "Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors, and the GIS user community";
@@ -149,16 +152,17 @@ export default function BengaluruMap({ organizations, focusId = null, onAddToCrm
       maxBoundsViscosity={0.8}
       scrollWheelZoom={scrollWheelZoom}
       className={className}
-      style={{ background: theme === "dark" ? "#0b0f15" : "#e8eef3" }}
+      style={{ background: dark ? "#2a2a2e" : "#e8eef3" }}
     >
-      <TileLayer key={tiles} url={tiles} attribution={attribution} maxNativeZoom={custom ? 19 : 18} />
-      {!custom && theme === "dark" && <TileLayer key="dark-labels" url={`${esri}/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}`} maxNativeZoom={16} />}
+      <TileLayer key={tiles} url={tiles} attribution={attribution} maxNativeZoom={custom ? 19 : dark ? 16 : 18} className={dark ? "wsis-map-base" : undefined} />
+      {dark && <TileLayer key="dark-roads" url={`${esri}/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}`} maxNativeZoom={18} className="wsis-map-roads" />}
+      {dark && <TileLayer key="dark-labels" url={`${esri}/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}`} maxNativeZoom={16} />}
       <MarkerClusterGroup>
         {located.map((o) => (
           <Marker
             key={o.id}
             position={[o.lat!, o.lng!]}
-            icon={iconFor(o.org_type, Boolean(o.opportunity_id))}
+            icon={iconFor(o.org_type, o.crm_opportunity_count > 0)}
             title={o.name}
             ref={(m) => {
               if (m) markers.current.set(o.id, m);

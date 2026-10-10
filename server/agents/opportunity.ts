@@ -26,7 +26,7 @@ const TYPE_WEIGHT: Record<OrgType, { score: number; reason: string } | null> = {
 
 const WATER_INTENSIVE_SECTOR =
   /\b(textile|dyeing|garment|laundry|pharma\w*|chemical|food|beverage|brewer\w*|distiller\w*|dairy|bottling|paper|electroplating|plating|metal finishing|automotive|auto components?|foundry|castings?|data cent(er|re)|semiconductor|electronics|paint|leather|hospitality|biotech\w*)\b/i;
-const WATER_SIGNAL = /\b(borewell|bore well|tanker|stp|etp|zld|zero liquid|effluent|groundwater|water scarcity|water shortage|recycl\w*|rainwater|kl\/?day|kld|mld)\b/i;
+const WATER_SIGNAL = /\b(borewell|bore well|tanker|stp|etp|zld|zero liquid|effluent|groundwater|water scarcity|water shortage|recycl\w*|rainwater|kl\/?day|kld|mld)s?\b/i;
 const INDUSTRIAL_CLUSTERS = /\b(peenya|bommasandra|jigani|electronic city|whitefield|kiadb|attibele|hoskote|doddaballapur|nelamangala|dabaspet|bidadi|harohalli|veerasandra|hebbagodi|mahadevapura)\b/i;
 
 export interface OrgForAssessment {

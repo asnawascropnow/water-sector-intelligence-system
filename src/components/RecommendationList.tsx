@@ -17,8 +17,12 @@ const STRIPE: Record<string, string> = { High: "bg-red-500", Medium: "bg-amber-4
 
 function targetLink(r: Recommendation) {
   if (r.action_type === "review_import") return `/import?id=${(r.payload as { import_id?: number }).import_id ?? ""}`;
+  if (r.opportunity_id) return `/crm/${r.opportunity_id}`;
+  const projectId = (r.payload as { project_id?: number }).project_id;
+  if (projectId) return `/projects/${projectId}?tab=opportunities`;
   return r.organization_id ? `/organizations/${r.organization_id}` : null;
 }
+const isReview = (r: Recommendation) => r.action_type === "review_import" || r.action_type === "review_water_suggestions";
 
 export default function RecommendationList({ items, compact }: { items: Recommendation[]; compact?: boolean }) {
   const { invalidate, toast } = useApp();
@@ -71,11 +75,11 @@ export default function RecommendationList({ items, compact }: { items: Recommen
                 {link &&
                   (compact ? (
                     <Link to={link} className="inline-flex items-center gap-0.5 text-xs font-medium text-[var(--accent-text)] hover:underline whitespace-nowrap">
-                      {r.action_type === "review_import" ? "Review" : "Open"} <ArrowUpRight size={12} />
+                      {isReview(r) ? "Review" : "Open"} <ArrowUpRight size={12} />
                     </Link>
                   ) : (
                     <Link to={link}>
-                      <Button size="sm">{r.action_type === "review_import" ? "Review" : "Open"}</Button>
+                      <Button size="sm">{isReview(r) ? "Review" : "Open"}</Button>
                     </Link>
                   ))}
                 {!compact && (

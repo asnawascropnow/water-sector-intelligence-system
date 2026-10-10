@@ -7,12 +7,40 @@ import { geocoderEnabled } from "../lib/geocode";
 import { llmEnabled, llmModel } from "../extraction/llm";
 import { dailyBrief, listOpenRecommendations, refreshRecommendations } from "../agents/runner";
 import { assessAndStore } from "../agents/opportunity";
+import { getCatalog, organizationTaxonomy, waterInterventions } from "../lib/catalog";
+import { waterOpportunityCounts } from "../lib/waterOpportunities";
+import { crmPipelineCounts } from "../lib/crm";
 import type { DashboardSummary, SystemInfo } from "../../shared/types";
 
 export const usersRouter = Router();
 export const dashboardRouter = Router();
 export const aiRouter = Router();
 export const systemRouter = Router();
+export const metaRouter = Router();
+
+/** Read-only catalogs: organization types, project types, roles, interventions, opportunity types, pipelines, fact definitions. */
+metaRouter.get(
+  "/",
+  ah(async (_req, res) => {
+    res.json(await getCatalog(db()));
+  }),
+);
+
+/** Organization taxonomy: groups, types (with group, order, active state, map colour) and saved views. */
+metaRouter.get(
+  "/organization-types",
+  ah(async (_req, res) => {
+    res.json(await organizationTaxonomy(db()));
+  }),
+);
+
+/** Water intervention catalog: stable key, label, group, description, active state, order. */
+metaRouter.get(
+  "/water-interventions",
+  ah(async (_req, res) => {
+    res.json(await waterInterventions(db()));
+  }),
+);
 
 usersRouter.get(
   "/",
@@ -54,14 +82,17 @@ dashboardRouter.get(
          (SELECT count(*)::int FROM organizations WHERE merged_into IS NULL) AS "totalOrganizations",
          (SELECT count(*)::int FROM organizations WHERE merged_into IS NULL AND created_at > now() - interval '7 days') AS "newOrganizations",
          (SELECT count(*)::int FROM crm_opportunities) AS "crmOpportunities",
-         (SELECT count(*)::int FROM crm_opportunities WHERE status NOT IN ('Converted','Not Interested','Lost')) AS "activeOpportunities",
+         (SELECT count(*)::int FROM crm_opportunities o JOIN pipeline_stages ps ON ps.pipeline = o.pipeline AND ps.name = o.status WHERE ps.kind = 'open') AS "activeOpportunities",
          (SELECT count(*)::int FROM crm_opportunities WHERE proposal_status IN ('Sent','Accepted','Rejected')) AS "proposalsSent",
-         (SELECT count(*)::int FROM crm_opportunities WHERE status = 'Pilot' OR pilot_status IN ('Planned','In Progress','Completed')) AS "pilots",
+         (SELECT count(*)::int FROM crm_opportunities o JOIN pipeline_stages ps ON ps.pipeline = o.pipeline AND ps.name = o.status
+           WHERE ps.milestone = 'pilot' OR o.pilot_status IN ('Planned','In Progress','Completed')) AS "pilots",
          (SELECT count(*)::int FROM tasks WHERE status = 'Pending' AND due_date < $1) AS "overdueFollowUps"`,
       [todayIST()],
     );
-    const pipeline = (await q.query<{ status: string; count: number }>(`SELECT status, count(*)::int AS count FROM crm_opportunities GROUP BY status`)).rows;
-    res.json({ ...rows[0], pipeline });
+    const pipeline = (
+      await q.query<{ pipeline: string; status: string; count: number }>(`SELECT pipeline, status, count(*)::int AS count FROM crm_opportunities GROUP BY pipeline, status ORDER BY pipeline, status`)
+    ).rows;
+    res.json({ ...rows[0], pipeline, pipelines: await crmPipelineCounts(q, todayIST()), water: await waterOpportunityCounts(q) });
   }),
 );
 
@@ -110,6 +141,7 @@ systemRouter.get(
       geocoder: geocoderEnabled() ? "nominatim" : "none",
       llm: llmEnabled(),
       llmModel: llmEnabled() ? llmModel() : null,
+      schemaVersion: (await db().query<{ v: string | null }>(`SELECT max(version) AS v FROM schema_migrations`)).rows[0]?.v ?? null,
     };
     res.json(info);
   }),

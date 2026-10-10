@@ -4,7 +4,7 @@ import { ORG_TYPES } from "../../../shared/constants";
 import type { DuplicateResult, Organization, OrganizationInput } from "../../../shared/types";
 import { api, ApiError } from "../../lib/api";
 import { useApp } from "../../context/AppContext";
-import { Badge, Button, ErrorNote, Field, Input, Modal, Select } from "../ui";
+import { Badge, Button, ErrorNote, Field, Input, Modal } from "../ui";
 
 type FormState = Record<keyof OrganizationInput, string>;
 const EMPTY: FormState = {
@@ -95,7 +95,14 @@ export function DuplicatePanel({
 }
 
 export default function OrganizationForm({ open, onClose, organization }: { open: boolean; onClose: () => void; organization?: Organization }) {
-  const { invalidate, toast } = useApp();
+  const { invalidate, toast, taxonomy } = useApp();
+  // Organization types from the database catalog, grouped. Inactive (legacy) types are offered only to
+  // keep an organization's current value selectable. Falls back to the MVP list until the catalog loads.
+  const typeGroups = taxonomy
+    ? taxonomy.groups
+        .map((g) => ({ key: g.key, label: g.label, types: taxonomy.types.filter((t) => t.group === g.key && (t.active || t.key === organization?.org_type)).map((t) => t.key) }))
+        .filter((g) => g.types.length)
+    : [{ key: "mvp", label: "Types", types: [...ORG_TYPES] as string[] }];
   const navigate = useNavigate();
   const [form, setForm] = useState<FormState>(EMPTY);
   const [error, setError] = useState<string | null>(null);
@@ -183,7 +190,23 @@ export default function OrganizationForm({ open, onClose, organization }: { open
             <Input value={form.name} onChange={set("name")} autoFocus required />
           </Field>
           <Field label="Organization type" hint={!form.org_type ? "Leave blank to infer from the name (labelled AI Inference)" : undefined}>
-            <Select value={form.org_type} onChange={set("org_type")} options={ORG_TYPES} placeholder="Unknown" />
+            <select
+              value={form.org_type}
+              onChange={set("org_type")}
+              aria-label="Organization type"
+              className="w-full h-9 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 pr-8 text-sm text-[var(--text)] shadow-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/25 focus:border-[var(--accent)]"
+            >
+              <option value="">Unknown</option>
+              {typeGroups.map((g) => (
+                <optgroup key={g.key} label={g.label}>
+                  {g.types.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
           </Field>
           <Field label="Sector">
             <Input value={form.sector} onChange={set("sector")} placeholder="e.g. Textile dyeing, Pharma" />

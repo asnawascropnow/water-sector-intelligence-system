@@ -213,7 +213,11 @@ export interface NormalizedRecord {
  * Normalise a raw organization record. Never invents values: anything derived rather than
  * read directly from the source is labelled (AI Inference / Estimated) in field_sources.
  */
-export function normalizeRecord(input: OrganizationInput, sourceLabel: string): NormalizedRecord {
+/**
+ * @param knownTypes optional catalog (lower-case name → canonical name). When the input type exactly
+ *   matches an active catalog type (e.g. "Architect"), it is kept as-is; otherwise the MVP heuristics apply.
+ */
+export function normalizeRecord(input: OrganizationInput, sourceLabel: string, knownTypes?: Map<string, string>): NormalizedRecord {
   const warnings: string[] = [];
   const fs: Record<string, FieldSource> = {};
   const name = cleanText(input.name) ?? "";
@@ -221,7 +225,7 @@ export function normalizeRecord(input: OrganizationInput, sourceLabel: string): 
 
   const address = cleanText(input.address);
   const sector = cleanText(input.sector);
-  let org_type = matchOrgType(input.org_type);
+  let org_type = (knownTypes?.get(String(input.org_type ?? "").trim().toLowerCase()) as OrgType | undefined) ?? matchOrgType(input.org_type);
   if (org_type) fs.org_type = { provenance: "Unverified", source: sourceLabel };
   else {
     const inferred = inferOrgType(name, sector);

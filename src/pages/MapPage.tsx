@@ -22,7 +22,7 @@ export default function MapPage() {
     setFilters((f) => ({ ...f, types: f.types.includes(t) ? f.types.filter((x) => x !== t) : [...f.types, t] }));
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-3rem)] md:h-screen overflow-hidden">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-4rem)] overflow-hidden">
       <aside className="md:w-[22rem] min-w-0 shrink-0 border-b md:border-b-0 md:border-r border-[var(--border)] bg-[var(--surface)] flex flex-col max-h-[45vh] md:max-h-none">
         <div className="p-4 space-y-3 border-b border-[var(--border)]">
           <div>
@@ -91,7 +91,7 @@ export default function MapPage() {
                 className={cx("w-full text-left px-4 py-2 hover:bg-[var(--surface-2)]", o.lat != null ? "cursor-pointer" : "cursor-default")}
               >
                 <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full shrink-0" style={{ background: ORG_TYPE_COLORS[o.org_type] }} />
+                  <span className="h-2 w-2 rounded-full shrink-0" style={{ background: ORG_TYPE_COLORS[o.org_type] ?? ORG_TYPE_COLORS.Other }} />
                   <span className="text-sm truncate">{o.name}</span>
                 </div>
                 <div className="text-xs text-[var(--text-3)] ml-4 truncate">

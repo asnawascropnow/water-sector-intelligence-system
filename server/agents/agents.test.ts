@@ -74,3 +74,10 @@ test("next action agent: stale proposal → follow up; unassigned → assign; da
   const after = await dailyBrief(db, null);
   assert.ok(!after.recommendations.some((r) => r.title === "Assign Nobody Owns Me Hospital"));
 });
+
+test("opportunity agent: recorded water information counts, including plural wording", () => {
+  for (const text of ["Uses 2 borewells", "Buys 20 tankers a month", "Has an STP"]) {
+    const r = assessOrganization({ ...base, org_type: "School", intelligence: { waterInfo: [{ text, provenance: "Verified", source: "visit" }] } });
+    assert.ok(r.reasons.some((x) => x.includes(text)), `"${text}" should be used as evidence`);
+  }
+});

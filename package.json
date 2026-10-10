@@ -12,7 +12,9 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "test": "tsx --test server/lib/*.test.ts server/extraction/*.test.ts server/agents/*.test.ts"
+    "test": "tsx --test \"server/**/*.test.ts\" \"src/**/*.test.ts\"",
+    "migrate": "tsx server/db/migrate-cli.ts",
+    "migrate:status": "tsx server/db/migrate-cli.ts status"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",

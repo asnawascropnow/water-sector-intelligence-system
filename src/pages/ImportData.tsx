@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { FileUp } from "lucide-react";
 import { ORG_TYPES } from "../../shared/constants";
-import type { ImportDetail, ImportRecord, ImportSummary, OrganizationInput } from "../../shared/types";
+import type { DuplicateResult, ImportDetail, ImportRecord, ImportSummary, OrganizationInput } from "../../shared/types";
 import { api, ApiError } from "../lib/api";
 import { useApi } from "../lib/useApi";
 import { formatDateTime } from "../lib/format";
@@ -334,7 +334,7 @@ function ImportReview({ id }: { id: number }) {
         {dupFor && (
           <DuplicatePanel
             incoming={dupFor.data}
-            duplicate={dupFor.duplicate}
+            duplicate={dupFor.duplicate as DuplicateResult /* project records have no review UI yet (Phase 4: API only) */}
             busy={busyIdx === dupFor.index}
             onMerge={(target) => decide(dupFor, "merge", { merge_into: target })}
             onKeepSeparate={() => decide(dupFor, "keep_separate")}
